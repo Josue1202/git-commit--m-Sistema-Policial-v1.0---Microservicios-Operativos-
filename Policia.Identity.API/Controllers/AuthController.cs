@@ -64,7 +64,8 @@ namespace Policia.Identity.API.Controllers
                 Token = tokenGenerado, // <--- AQUÍ ENTREGAMOS LA PLACA AL FRONTEND
                 Usuario = usuario.Username,
                 IdPersonal = usuario.IdPersonal,
-                IdRol = usuario.IdRol
+                IdRol = usuario.IdRol,
+                expiracion = DateTime.Now.AddMinutes(60) //para que funcione el timepo de inactividad ps gilerto jjaj
             });
         }
 
