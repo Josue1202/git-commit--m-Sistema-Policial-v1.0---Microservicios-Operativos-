@@ -1,0 +1,86 @@
+﻿@page "/login"
+@using Policia.Web.Models
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+
+<div class="card shadow" style="width: 400px; margin: auto; margin-top: 50px;">
+    <div class="card-header bg-dark text-white text-center">
+        <h3>👮‍♂️ ACCESO PNP</h3>
+    </div>
+    <div class="card-body">
+
+        <div class="mb-3">
+            <label class="form-label">Usuario (CIP):</label>
+            <input @bind="request.Usuario" class="form-control" placeholder="Ingrese usuario..." />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Contraseña:</label>
+            <input @bind="request.Password" type="password" class="form-control" placeholder="*******" />
+        </div>
+
+        <button class="btn btn-primary w-100" @onclick="IniciarSesion" disabled="@cargando">
+            @if (cargando)
+            {
+                <span>🔄 Conectando...</span>
+            }
+            else
+            {
+
+                <span>INGRESAR</span>
+            }
+        </button>
+
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger mt-3">@mensajeError</div>
+        }
+    </div>
+</div>
+
+@code {
+    // OBJETOS Y VARIABLES
+    LoginRequest request = new LoginRequest();
+    string mensajeError = "";
+    bool cargando = false;
+
+    // LA LÓGICA
+    async Task IniciarSesion()
+    {
+        cargando = true;
+        mensajeError = "";
+
+        try
+        {
+            // 1. DISPARO AL GATEWAY
+            var respuesta = await Http.PostAsJsonAsync("seguridad/login", request);
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                // 2. LEER LA RESPUESTA
+                var resultado = await respuesta.Content.ReadFromJsonAsync<LoginResponse>();
+
+                // 3. ¡GUARDAR LA PLACA EN EL BOLSILLO! (LocalStorage)
+                await LocalStorage.SetItemAsync("token_policial", resultado.Token);
+                await LocalStorage.SetItemAsync("usuario_nombre", resultado.Usuario);
+
+                // 4. IR A LA PANTALLA DE ARMAS
+                NavManager.NavigateTo("/mis-armas");
+            }
+            else
+            {
+                mensajeError = "⛔ Credenciales incorrectas o usuario inactivo.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "❌ Error de conexión con el Gateway.";
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}

@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Elementos de la solución/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Folder Name="/Fronted/">
+    <Project Path="Policia.Web/Policia.Web.csproj" Id="43e3337e-058e-44fd-84b0-6481da5f6672" />
+  </Folder>
+  <Folder Name="/Gateways/">
+    <Project Path="Policia.Gateway/Policia.Gateway.csproj" Id="c6b089ec-4ddc-4ad8-a730-fb3021283ebe" />
+  </Folder>
+  <Folder Name="/Services/">
+    <Project Path="Policia.Identity.API/Policia.Identity.API.csproj" />
+    <Project Path="Policia.Logistica.API/Policia.Logistica.API.csproj" />
+    <Project Path="Policia.RRHH.API/Policia.RRHH.API.csproj" />
+  </Folder>
+</Solution>

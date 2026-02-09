@@ -1,0 +1,6 @@
+@Policia.Logistica.API_HostAddress = http://localhost:5070
+
+GET {{Policia.Logistica.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

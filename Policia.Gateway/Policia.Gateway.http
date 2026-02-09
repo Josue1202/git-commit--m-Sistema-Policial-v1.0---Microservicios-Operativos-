@@ -1,0 +1,6 @@
+@Policia.Gateway_HostAddress = http://localhost:5107
+
+GET {{Policia.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
