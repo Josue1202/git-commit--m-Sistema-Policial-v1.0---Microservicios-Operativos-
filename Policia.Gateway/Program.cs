@@ -86,6 +86,10 @@ app.UseCors("PermitirFrontend");
 // Esto enciende el scanner. Sin esto, la configuración de arriba no sirve.
 app.UseAuthentication();
 
+//PARA LA AUTORIZACION
+app.UseAuthorization();
+
+
 // --- 5. ACTIVAMOS OCELOT (EL TRÁFICO) ---
 // El 'await' es importante porque Ocelot trabaja asíncrono para no trabar el servidor.
 // Aquí es donde el Gateway empieza a redirigir las llamadas a RRHH, Logística, etc.
@@ -98,8 +102,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
 
 app.MapControllers();
 
