@@ -4,11 +4,11 @@
       "UpstreamPathTemplate": "/rrhh/{everything}",
       "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
       "DownstreamPathTemplate": "/api/{everything}",
-      "DownstreamScheme": "http",
+      "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5041
+          "Port": 7120
         }
       ],
       "AuthenticationOptions": {
@@ -46,6 +46,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5107"
+    "BaseUrl": "http://localhost:7059"
   }
 }
