@@ -84,7 +84,7 @@ namespace Policia.Identity.API.Controllers
                 new Claim("idPersonal", usuario.IdPersonal.ToString()),
                 
                 // Guardamos el Rol para saber si es Admin o Comisario
-                new Claim("rol", usuario.IdRol.ToString())
+                new Claim(ClaimTypes.Role, usuario.IdRol.ToString())
             };
 
             // B. PREPARAMOS LA LLAVE MAESTRA (LA FIRMA DEL COMISARIO)
