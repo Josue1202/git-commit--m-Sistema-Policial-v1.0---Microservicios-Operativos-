@@ -7,7 +7,6 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 // 1. CONEXIÓN A BD
 builder.Services.AddDbContext<BdSeguridadContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CadenaConexion")));
@@ -41,9 +40,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             // "Sí. Fíjate en la fecha de vencimiento. Si ya pasó, no lo dejes entrar."
             ValidateLifetime = true,
 
+
             // 4. ¿Validar la Firma (SigningKey)? ¡LA MÁS IMPORTANTE!
             // "Sí. Verifica que la firma digital coincida con nuestra CLAVE SECRETA."
             ValidateIssuerSigningKey = true,
+
 
             // C. LEEMOS LOS VALORES REALES DESDE appsettings.json
             // Aquí conectamos con el archivo de configuración para sacar la clave secreta y los nombres.
@@ -53,6 +54,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
+
 
 
 // (TU CÓDIGO ORIGINAL)
@@ -72,7 +74,6 @@ app.UseRouting();
 app.UseHttpsRedirection();
 
 // --- ACTIVACIÓN DE LOS FILTROS (CÓDIGO NUEVO AGREGADO) ---
-
 // D. ACTIVAMOS AL GUARDIA (Authentication)
 // OJO: Esto DEBE ir antes de Authorization.
 // Significa: "¿Quién eres? Déjame ver tu placa y verificar que no sea falsa".
@@ -80,8 +81,10 @@ app.UseAuthentication();
 
 // E. ACTIVAMOS LOS PERMISOS (Authorization) - (YA LO TENÍAS, PERO AHORA FUNCIONA CON EL DE ARRIBA)
 // Significa: "Ya sé quién eres. Ahora voy a ver si tienes permiso para entrar aquí".
+
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+

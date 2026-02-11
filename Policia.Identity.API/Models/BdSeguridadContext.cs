@@ -43,24 +43,24 @@ public partial class BdSeguridadContext : DbContext
 
         modelBuilder.Entity<Usuario>(entity =>
         {
-            entity.HasKey(e => e.IdUsuario).HasName("PK__Usuario__5B65BF97058C642A");
+            entity.HasKey(e => e.IdUsuario).HasName("PK__Usuario__5B65BF973DA34EF1");
 
             entity.ToTable("Usuario");
 
-            entity.HasIndex(e => e.Username, "UQ__Usuario__536C85E4BADCAE5F").IsUnique();
+            entity.HasIndex(e => e.Cip, "UQ__Usuario__C1FFD81C7F558F42").IsUnique();
 
+            entity.Property(e => e.Cip)
+                .HasMaxLength(50)
+                .IsUnicode(false);
             entity.Property(e => e.Estado).HasDefaultValue(true);
             entity.Property(e => e.PasswordHash)
                 .HasMaxLength(255)
-                .IsUnicode(false);
-            entity.Property(e => e.Username)
-                .HasMaxLength(50)
                 .IsUnicode(false);
 
             entity.HasOne(d => d.IdRolNavigation).WithMany(p => p.Usuarios)
                 .HasForeignKey(d => d.IdRol)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Usuario__IdRol__4F7CD00D");
+                .HasConstraintName("FK__Usuario__IdRol__71D1E811");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens; // <--- NECESARIO PARA CRIPTOGRAFÍA
+using Policia.Identity.API.DTOs;
 using Policia.Identity.API.Models;
 using System.IdentityModel.Tokens.Jwt; // <--- NECESARIO PARA CREAR EL TOKEN
 using System.Security.Claims; // <--- NECESARIO PARA LOS "CLAIMS" (DATOS DEL USUARIO)
-using System.Text; // <--- NECESARIO PARA LEER TEXTO
+using System.Text;
 
 namespace Policia.Identity.API.Controllers
 {
@@ -25,14 +26,13 @@ namespace Policia.Identity.API.Controllers
 
         // POST: api/Auth/Login
         [HttpPost("Login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginDTO request)
         {
             // --- FASE 1: VALIDACIONES NORMALES (IGUAL QUE ANTES) ---
-
             // 1. Buscamos al usuario en la BD
             var usuario = await _context.Usuarios
                 //.Include(u => u.IdRolNavigation) // Descomenta si usas Roles navegables
-                .FirstOrDefaultAsync(u => u.Username == request.Usuario);
+                .FirstOrDefaultAsync(u => u.Cip == request.Cip);
 
             // 2. Si no existe, adiós.
             if (usuario == null)
@@ -53,7 +53,6 @@ namespace Policia.Identity.API.Controllers
             }
 
             // --- FASE 2: GENERACIÓN DE LA PLACA (NUEVO) ---
-
             // Si llegamos aquí, el usuario es legítimo. ¡A fabricar su placa!
             var tokenGenerado = GenerarToken(usuario);
 
@@ -62,7 +61,7 @@ namespace Policia.Identity.API.Controllers
             {
                 Mensaje = "Acceso Autorizado 👮‍♂️",
                 Token = tokenGenerado, // <--- AQUÍ ENTREGAMOS LA PLACA AL FRONTEND
-                Usuario = usuario.Username,
+                Usuario = usuario.Cip,
                 IdPersonal = usuario.IdPersonal,
                 IdRol = usuario.IdRol,
                 expiracion = DateTime.Now.AddMinutes(60) //para que funcione el timepo de inactividad ps gilerto jjaj
@@ -78,11 +77,11 @@ namespace Policia.Identity.API.Controllers
             var claims = new[]
             {
                 // "Sub" es estándar para el "Subject" (Sujeto/Usuario)
-                new Claim(JwtRegisteredClaimNames.Sub, usuario.Username),
-                
+                new Claim(JwtRegisteredClaimNames.Sub, usuario.Cip),             
+
                 // Guardamos el ID Personal para que Logística sepa quién pide el arma
-                new Claim("idPersonal", usuario.IdPersonal.ToString()),
-                
+                new Claim("idPersonal", usuario.IdPersonal.ToString()),              
+
                 // Guardamos el Rol para saber si es Admin o Comisario
                 new Claim(ClaimTypes.Role, usuario.IdRol.ToString())
             };
@@ -105,14 +104,8 @@ namespace Policia.Identity.API.Controllers
             );
 
             // E. CONVERTIMOS EL OBJETO A STRING (TEXTO)
-            return new JwtSecurityTokenHandler().WriteToken(token);
+          return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
-
-    // CLASE DTO (IGUAL QUE ANTES)
-    public class LoginRequest
-    {
-        public string Usuario { get; set; }
-        public string Password { get; set; }
-    }
 }
+

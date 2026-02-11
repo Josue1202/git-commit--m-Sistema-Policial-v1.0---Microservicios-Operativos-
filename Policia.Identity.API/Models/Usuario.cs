@@ -11,7 +11,7 @@ public partial class Usuario
 
     public int IdRol { get; set; }
 
-    public string Username { get; set; } = null!;
+    public string Cip { get; set; } = null!;
 
     public string PasswordHash { get; set; } = null!;
 
