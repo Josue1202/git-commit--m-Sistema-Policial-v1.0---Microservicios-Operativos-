@@ -57,6 +57,22 @@ public partial class BdSeguridadContext : DbContext
                 .HasMaxLength(255)
                 .IsUnicode(false);
 
+            // ========== CONFIGURACIÓN DE AUDITORÍA (NUEVO) ==========
+
+            entity.Property(e => e.CreadoPor)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+
+            entity.Property(e => e.FechaCreacion)
+                .HasDefaultValueSql("GETDATE()");
+
+            entity.Property(e => e.ModificadoPor)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+
+            // FechaModificacion no necesita default, se llena solo al modificar
+
+
             entity.HasOne(d => d.IdRolNavigation).WithMany(p => p.Usuarios)
                 .HasForeignKey(d => d.IdRol)
                 .OnDelete(DeleteBehavior.ClientSetNull)
