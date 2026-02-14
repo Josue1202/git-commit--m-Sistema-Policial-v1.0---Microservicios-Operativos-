@@ -51,8 +51,15 @@ else
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title">⚙️ Administración</h5>
-                        <p class="card-text">Crear usuarios.</p>
-                        <button class="btn btn-secondary" disabled>Próximamente</button>
+                        <p class="card-text">Gestión de usuarios del sistema.</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary btn-sm" @onclick='() => NavManager.NavigateTo("/crear-usuario")'>
+                                ➕ Crear
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" @onclick='() => NavManager.NavigateTo("/listar-usuarios")'>
+                                📋 Listar
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
