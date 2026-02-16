@@ -1,44 +1,86 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Policia.Web</a>
+        <a class="navbar-brand" href="">
+            <span class="brand-icon">🛡️</span> PNP Sistema
+        </a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+<div class="@NavMenuCssClass nav-scrollable">
     <nav class="nav flex-column">
+
+        <!-- Inicio -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="CollapseOnMobile">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Inicio
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="mis-armas">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Mi Armamento
-            </NavLink>
+
+        <!-- ═══ PERSONAL ═══ -->
+        <div class="nav-group px-3">
+            <button class="nav-group-btn" @onclick="TogglePersonal">
+                <span class="nav-group-icon">👥</span>
+                <span class="nav-group-text">Personal</span>
+                <span class="nav-group-arrow @(personalOpen ? "open" : "")">›</span>
+            </button>
+            <div class="nav-group-items @(personalOpen ? "expanded" : "")">
+                <NavLink class="nav-link" href="personal" @onclick="CollapseOnMobile">
+                    <span class="nav-sub-dot"></span> Listar Personal
+                </NavLink>
+            </div>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="crear-usuario">
-                <span class="bi bi-person-plus-fill" aria-hidden="true"></span> Crear Usuario
-            </NavLink>
+
+        <!-- ═══ ARMAMENTO ═══ -->
+        <div class="nav-group px-3">
+            <button class="nav-group-btn" @onclick="ToggleArmamento">
+                <span class="nav-group-icon">🔫</span>
+                <span class="nav-group-text">Armamento</span>
+                <span class="nav-group-arrow @(armamentoOpen ? "open" : "")">›</span>
+            </button>
+            <div class="nav-group-items @(armamentoOpen ? "expanded" : "")">
+                <NavLink class="nav-link" href="mis-armas" @onclick="CollapseOnMobile">
+                    <span class="nav-sub-dot"></span> Mi Armamento
+                </NavLink>
+            </div>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="listar-usuarios">
-                <span class="bi bi-people-fill" aria-hidden="true"></span> Listar Usuarios
-            </NavLink>
+
+        <!-- ═══ ADMINISTRACIÓN ═══ -->
+        <div class="nav-section-title px-3">ADMINISTRACIÓN</div>
+
+        <div class="nav-group px-3">
+            <button class="nav-group-btn" @onclick="ToggleUsuarios">
+                <span class="nav-group-icon">🔐</span>
+                <span class="nav-group-text">Usuarios</span>
+                <span class="nav-group-arrow @(usuariosOpen ? "open" : "")">›</span>
+            </button>
+            <div class="nav-group-items @(usuariosOpen ? "expanded" : "")">
+                <NavLink class="nav-link" href="crear-usuario" @onclick="CollapseOnMobile">
+                    <span class="nav-sub-dot"></span> Crear Usuario
+                </NavLink>
+                <NavLink class="nav-link" href="listar-usuarios" @onclick="CollapseOnMobile">
+                    <span class="nav-sub-dot"></span> Listar Usuarios
+                </NavLink>
+            </div>
         </div>
+
     </nav>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
+    private bool personalOpen = false;
+    private bool armamentoOpen = false;
+    private bool usuariosOpen = false;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
+    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
+    private void CollapseOnMobile() => collapseNavMenu = true;
+
+    private void TogglePersonal() => personalOpen = !personalOpen;
+    private void ToggleArmamento() => armamentoOpen = !armamentoOpen;
+    private void ToggleUsuarios() => usuariosOpen = !usuariosOpen;
 }

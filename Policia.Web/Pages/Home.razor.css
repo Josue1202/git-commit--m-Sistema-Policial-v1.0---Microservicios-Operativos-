@@ -1,0 +1,329 @@
+/* ══════════════════════════════════════════
+   HOME DASHBOARD - Paleta PNP
+   ══════════════════════════════════════════ */
+
+/* ── LOADING ── */
+.loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 1.5rem;
+}
+
+.loading-emblem {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-ring {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 3px solid rgba(201, 168, 76, 0.15);
+    border-top-color: #c9a84c;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #1a6b4f;
+    letter-spacing: 3px;
+}
+
+.loading-msg {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+/* ── BANNER DE BIENVENIDA ── */
+.welcome-banner {
+    background: linear-gradient(135deg, #0d3527 0%, #1a5c42 60%, #17503a 100%);
+    border-radius: 14px;
+    padding: 1.75rem 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(13, 53, 39, 0.3);
+}
+
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 2px solid rgba(201, 168, 76, 0.1);
+    pointer-events: none;
+}
+
+.welcome-banner::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8b6914, #c9a84c 30%, #dbb960 50%, #c9a84c 70%, #8b6914);
+}
+
+.welcome-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #c9a84c;
+    margin: 0 0 0.3rem 0;
+    letter-spacing: 1px;
+}
+
+.welcome-sub {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.welcome-sub strong {
+    color: white;
+}
+
+/* Botón cerrar sesión */
+.btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(220, 53, 69, 0.15);
+    color: #ff8a8a;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.btn-logout:hover {
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border-color: #dc3545;
+}
+
+.logout-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* ══════════ STATS GRID ══════════ */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+/* ── STAT CARD ── */
+.stat-card {
+    background: white;
+    border: 1px solid #e8ece9;
+    border-radius: 14px;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card:hover {
+    border-color: #1a6b4f;
+    box-shadow: 0 8px 25px rgba(13, 53, 39, 0.12);
+    transform: translateY(-2px);
+}
+
+.perfil-card {
+    cursor: default;
+}
+
+.perfil-card:hover {
+    transform: none;
+}
+
+/* Card header */
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1.25rem 0;
+}
+
+.stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0d3527, #1a6b4f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    box-shadow: 0 3px 10px rgba(13, 53, 39, 0.2);
+}
+
+.stat-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a3a2e;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-subtitle {
+    font-size: 0.7rem;
+    color: #999;
+    letter-spacing: 0.5px;
+}
+
+/* Card body (stats) */
+.stat-body {
+    padding: 1rem 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #f0f2f1;
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.stat-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1a3a2e;
+}
+
+.stat-value.positive {
+    color: #1a6b4f;
+}
+
+.stat-value.muted {
+    color: #aaa;
+}
+
+/* Loading & Error states */
+.stat-loading {
+    color: #c9a84c;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 1rem 0;
+    animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.stat-error {
+    color: #aaa;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+/* Card footer */
+.stat-footer {
+    padding: 0.75rem 1.25rem;
+    background: #f8faf9;
+    border-top: 1px solid #eef1f0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #1a6b4f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.stat-card:hover .stat-footer {
+    background: #1a6b4f;
+    color: white;
+}
+
+.stat-footer span {
+    transition: transform 0.3s;
+}
+
+.stat-card:hover .stat-footer span {
+    transform: translateX(4px);
+}
+
+.perfil-card .stat-footer {
+    color: #999;
+}
+
+.perfil-card:hover .stat-footer {
+    background: #f8faf9;
+    color: #999;
+}
+
+/* ── FOOTER ── */
+.home-footer {
+    text-align: center;
+    padding: 1.5rem 0;
+    border-top: 1px solid #e8ece9;
+    color: #aaa;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .welcome-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .welcome-title {
+        font-size: 1.1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}

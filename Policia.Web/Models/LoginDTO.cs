@@ -13,6 +13,7 @@
         public string Mensaje { get; set; } = "";
         public string Token { get; set; } = ""; // <--- ¡AQUÍ LLEGARÁ TU PLACA!
         public string Usuario { get; set; } = "";
+        public int? IdPersonal { get; set; }
         public int IdRol { get; set; }
     }
 }

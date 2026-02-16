@@ -1,0 +1,391 @@
+/* ══════════════════════════════════════════
+   LOGIN ORIGINAL - Sistema Policial PNP
+   Diseño propio: Card vertical con emblema
+   ══════════════════════════════════════════ */
+
+/* ── PÁGINA COMPLETA ── */
+.login-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: linear-gradient(160deg, #071a13 0%, #0d2e22 40%, #0a2119 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ── LÍNEA DORADA SUPERIOR ── */
+.top-gold-line {
+    height: 4px;
+    background: linear-gradient(90deg, #8b6914, #c9a84c 30%, #dbb960 50%, #c9a84c 70%, #8b6914);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+/* ── MARCA DE AGUA CIRCULAR (fondo) ── */
+.bg-watermark {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid rgba(201, 168, 76, 0.04);
+    box-shadow:
+        inset 0 0 80px rgba(201, 168, 76, 0.02),
+        0 0 0 30px rgba(201, 168, 76, 0.015),
+        0 0 0 60px rgba(201, 168, 76, 0.01),
+        0 0 0 90px rgba(201, 168, 76, 0.005);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── CONTENEDOR CENTRAL ── */
+.login-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    z-index: 1;
+}
+
+/* ══════════ TARJETA PRINCIPAL ══════════ */
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(201, 168, 76, 0.15);
+    animation: cardAppear 0.6s ease-out;
+}
+
+@keyframes cardAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ── SECCIÓN VERDE (arriba) ── */
+.card-top {
+    background: linear-gradient(160deg, #0d3527 0%, #1a5c42 60%, #17503a 100%);
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.card-top::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1));
+    pointer-events: none;
+}
+
+/* ── EMBLEMA PNP (imagen) ── */
+.emblem {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
+
+.emblem-ring {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid #c9a84c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 0 20px rgba(201, 168, 76, 0.25),
+        0 0 40px rgba(201, 168, 76, 0.1),
+        inset 0 0 15px rgba(201, 168, 76, 0.1);
+    animation: emblemGlow 3s ease-in-out infinite alternate;
+    overflow: hidden;
+}
+
+@keyframes emblemGlow {
+    from { box-shadow: 0 0 15px rgba(201, 168, 76, 0.2), 0 0 30px rgba(201, 168, 76, 0.08), inset 0 0 10px rgba(201, 168, 76, 0.08); }
+    to   { box-shadow: 0 0 25px rgba(201, 168, 76, 0.35), 0 0 50px rgba(201, 168, 76, 0.15), inset 0 0 20px rgba(201, 168, 76, 0.15); }
+}
+
+.emblem-img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Títulos del sistema */
+.system-name {
+    color: #c9a84c;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin: 0 0 0.3rem 0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.system-org {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    font-weight: 400;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+/* ── FRANJA DORADA ── */
+.gold-stripe {
+    height: 4px;
+    background: linear-gradient(90deg, #8b6914, #c9a84c 30%, #dbb960 50%, #c9a84c 70%, #8b6914);
+}
+
+/* ── SECCIÓN BLANCA (abajo) ── */
+.card-bottom {
+    background: #ffffff;
+    padding: 2rem 2rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: 0.5px;
+}
+
+/* ── CAMPOS DE ENTRADA ── */
+.field-row {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+    background: #f8faf9;
+}
+
+.field-row:focus-within {
+    border-color: #1a6b4f;
+    box-shadow: 0 0 0 3px rgba(26, 107, 79, 0.12);
+    background: #fff;
+}
+
+.field-icon-circle {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    background: linear-gradient(135deg, #1a6b4f, #22876a);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px;
+}
+
+.field-icon-circle ::deep svg {
+    width: 18px;
+    height: 18px;
+}
+
+.field-input {
+    flex: 1;
+    height: 48px;
+    border: none;
+    padding: 0 36px 0 10px;
+    font-size: 0.95rem;
+    background: transparent;
+    color: #222;
+    outline: none;
+}
+
+.field-input::placeholder {
+    color: #aaa;
+}
+
+/* Eye toggle */
+.btn-eye {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.btn-eye:hover {
+    opacity: 1;
+}
+
+.btn-eye ::deep svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ── BOTÓN INGRESAR ── */
+.btn-access {
+    width: 100%;
+    height: 48px;
+    background: linear-gradient(135deg, #0d3527, #1a6b4f, #17503a);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    box-shadow: 0 4px 15px rgba(13, 53, 39, 0.3);
+}
+
+.btn-access:hover:not(:disabled) {
+    background: linear-gradient(135deg, #17503a, #22876a, #1a6b4f);
+    box-shadow: 0 6px 20px rgba(13, 53, 39, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-access:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(13, 53, 39, 0.3);
+}
+
+.btn-access:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Spinner de carga */
+.btn-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── LINK OLVIDÓ CONTRASEÑA ── */
+.forgot-link {
+    display: block;
+    text-align: center;
+    color: #1a6b4f;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.forgot-link:hover {
+    color: #c9a84c;
+    text-decoration: underline;
+}
+
+/* ── MENSAJE DE ERROR ── */
+.error-box {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    text-align: center;
+    animation: shakeError 0.4s ease;
+}
+
+@keyframes shakeError {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+/* ══════════ FOOTER ══════════ */
+.login-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 2rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(201, 168, 76, 0.1);
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.footer-dept {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+}
+
+.footer-copy {
+    color: rgba(201, 168, 76, 0.5);
+    font-size: 0.7rem;
+}
+
+.footer-version {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* ══════════ RESPONSIVE ══════════ */
+@media (max-width: 480px) {
+    .login-card {
+        max-width: 100%;
+        border-radius: 12px;
+    }
+
+    .card-top {
+        padding: 2rem 1.5rem 1.5rem;
+    }
+
+    .card-bottom {
+        padding: 1.5rem;
+    }
+
+    .system-name {
+        font-size: 1rem;
+    }
+
+    .login-footer {
+        flex-direction: column;
+        gap: 0.25rem;
+        text-align: center;
+        padding: 0.6rem 1rem;
+    }
+
+    .bg-watermark {
+        width: 350px;
+        height: 350px;
+    }
+}

@@ -40,16 +40,16 @@
                             <td>@item.IdArmaNavigation?.Marca</td>
                             <td>@item.IdArmaNavigation?.Serie</td>
                             <td>
-                                @if (item.IdArmaNavigation?.EstadoArma == "OPERATIVO")
+                                @if (item.IdArmaNavigation?.Estado == "OPERATIVO")
                                 {
                                     <span class="badge bg-success">OPERATIVO</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-danger">@item.IdArmaNavigation?.EstadoArma</span>
+                                    <span class="badge bg-danger">@item.IdArmaNavigation?.Estado</span>
                                 }
                             </td>
-                            <td>@item.FechaAsignacion?.ToShortDateString()</td>
+                            <td>@item.FechaEntrega.ToShortDateString()</td>
                         </tr>
                     }
                 </tbody>
@@ -82,10 +82,16 @@
             // Esto es vital: Sin esto, el Gateway te responde "401 Unauthorized"
             Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // 3. DISPARAR A LOGÍSTICA
-            // OJO: Aquí estoy poniendo el ID "1" fijo para probar.
-            // (Luego haremos que lea tu ID real del token).
-            listaArmas = await Http.GetFromJsonAsync<List<AsignacionArmaDTO>>("logistica/armamento/misarmas/1");
+            // 3. LEER EL ID DEL PERSONAL DESDE LOCALSTORAGE
+            var idPersonal = await LocalStorage.GetItemAsync<int?>("id_personal");
+            if (idPersonal == null || idPersonal == 0)
+            {
+                mensajeError = "⛔ No se pudo obtener su ID de personal. Vuelva a iniciar sesión.";
+                return;
+            }
+
+            // 4. DISPARAR A LOGÍSTICA
+            listaArmas = await Http.GetFromJsonAsync<List<AsignacionArmaDTO>>($"logistica/armamento/misarmas/{idPersonal}");
         }
         catch (HttpRequestException ex)
         {
@@ -112,7 +118,7 @@
     // (Esto evita que tengas que crear archivos separados por ahora)
     public class AsignacionArmaDTO
     {
-        public DateTime? FechaAsignacion { get; set; }
+        public DateOnly FechaEntrega { get; set; }
         public ArmaDTO IdArmaNavigation { get; set; }
     }
 
@@ -120,7 +126,7 @@
     {
         public string Marca { get; set; }
         public string Serie { get; set; }
-        public string EstadoArma { get; set; }
+        public string Estado { get; set; }
         public TipoArmaDTO IdTipoNavigation { get; set; }
     }
 

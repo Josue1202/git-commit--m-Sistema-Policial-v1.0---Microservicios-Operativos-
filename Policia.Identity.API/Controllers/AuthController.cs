@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens; // <--- NECESARIO PARA CRIPTOGRAFÍA
 using Policia.Identity.API.DTOs;
@@ -88,6 +89,7 @@ namespace Policia.Identity.API.Controllers
         // POST https://localhost:7059/seguridad/CrearUsuario
         // Body: { "cip": "12345678", "idPersonal": 5, "password": "123", "idRol": 1 }
         //
+        [Authorize]
         [HttpPost("CrearUsuario")]
         public async Task<IActionResult> CrearUsuario([FromBody] CrearUsuarioDTO request)
         {
@@ -193,6 +195,7 @@ namespace Policia.Identity.API.Controllers
         // Devuelve TODOS los usuarios con su Rol.
         // El frontend lo usa para mostrar la tabla en ListarUsuarios.razor
         //
+        [Authorize]
         [HttpGet("Listar")]
         public async Task<IActionResult> Listar()
         {
@@ -223,6 +226,7 @@ namespace Policia.Identity.API.Controllers
         // NO borra al usuario, solo pone Estado = false
         // El usuario ya no podrá loguearse (el Login valida Estado)
         //
+        [Authorize]
         [HttpPut("Desactivar/{id}")]
         public async Task<IActionResult> Desactivar(int id)
         {
@@ -263,6 +267,7 @@ namespace Policia.Identity.API.Controllers
         // Vuelve a poner Estado = true
         // El usuario podrá loguearse otra vez
         //
+        [Authorize]
         [HttpPut("Reactivar/{id}")]
         public async Task<IActionResult> Reactivar(int id)
         {
