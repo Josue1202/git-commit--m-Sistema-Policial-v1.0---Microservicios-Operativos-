@@ -1,6 +1,28 @@
-﻿<Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+﻿<!-- 
+    🧠 ROUTER: Es el "CEREBRO" de Blazor WebAssembly
+    - Escucha cambios en la URL (ejemplo: de "/" a "/login")
+    - Busca la página que corresponde a esa URL
+    - Aplica el layout correspondiente
+-->
+<Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+    
+    <!-- 
+        Cuando ENCUENTRA una ruta que coincide con (arroba)page
+        Ejemplo: Usuario va a "/" → Busca archivo con (arroba)page "/"
+    -->
     <Found Context="routeData">
+        
+        <!-- 
+            RouteView: Renderiza la página encontrada
+            DefaultLayout: Si la página NO especifica (arroba)layout, usa MainLayout
+            
+            Ejemplo:
+            - Home.razor NO tiene (arroba)layout → usa MainLayout (con sidebar)
+            - Login.razor tiene (arroba)layout EmptyLayout → usa EmptyLayout (sin sidebar)
+        -->
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
+        
+        <!-- Enfoca el cursor en el primer <h1> de la página -->
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
 </Router>

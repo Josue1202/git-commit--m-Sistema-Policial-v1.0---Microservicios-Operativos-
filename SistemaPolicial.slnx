@@ -1,6 +1,12 @@
 <Solution>
+  <Folder Name="/docs/">
+    <File Path="arquitectura.md" />
+    <File Path="base-datos.md" />
+    <File Path="endpoints.md" />
+  </Folder>
   <Folder Name="/Elementos de la solución/">
     <File Path=".gitignore" />
+    <File Path="README.md" />
   </Folder>
   <Folder Name="/Fronted/">
     <Project Path="Policia.Web/Policia.Web.csproj" Id="43e3337e-058e-44fd-84b0-6481da5f6672" />

@@ -20,7 +20,7 @@ namespace Policia.Logistica.API.Controllers
 
         // 1. GET: api/Armamento
         // Misión: Listar TODAS las armas del almacén (Inventario General)
-        [HttpGet]
+        [Authorize(Roles = "1")] // 1 = Admin
         public async Task<ActionResult<IEnumerable<Arma>>> GetInventario()
         {
             // Como pusimos [Authorize] arriba, el código no llegará aquí si el usuario no tiene Token.
