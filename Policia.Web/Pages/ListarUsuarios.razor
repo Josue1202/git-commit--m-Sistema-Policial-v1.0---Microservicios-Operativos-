@@ -2,7 +2,6 @@
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavManager
 @inject HttpClient Http
-@using System.Net.Http.Headers
 @using Policia.Web.Models
 
 <PageTitle>Gestión de Usuarios</PageTitle>
@@ -69,6 +68,10 @@
                             <td>@(u.ModificadoPor ?? "-")</td>
                             <td>@(u.FechaModificacion?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                             <td>
+                                <button class="btn btn-primary btn-sm me-1"
+                                        @onclick='() => NavManager.NavigateTo($"/editar-usuario/{u.IdUsuario}")'>
+                                    ✏️ Editar
+                                </button>
                                 @if (u.Estado == true)
                                 {
                                     <button class="btn btn-warning btn-sm"
@@ -121,7 +124,6 @@
             return;
         }
 
-        Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         await CargarUsuarios();
     }
 

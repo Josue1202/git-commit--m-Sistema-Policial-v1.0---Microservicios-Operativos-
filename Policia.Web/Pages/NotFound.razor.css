@@ -1,0 +1,64 @@
+/* ══════════════════════════════════════════
+   NOT FOUND 404 - Paleta PNP
+   ══════════════════════════════════════════ */
+
+.notfound-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    text-align: center;
+    padding: 2rem;
+}
+
+.notfound-icon {
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.notfound-code {
+    font-size: 4rem;
+    font-weight: 900;
+    color: #c9a84c;
+    margin: 0;
+    letter-spacing: 4px;
+    line-height: 1;
+}
+
+.notfound-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a3a2e;
+    margin: 0.5rem 0;
+}
+
+.notfound-msg {
+    color: #777;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+}
+
+.notfound-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: linear-gradient(135deg, #0d3527, #1a6b4f);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+    box-shadow: 0 3px 10px rgba(13, 53, 39, 0.2);
+}
+
+.notfound-btn:hover {
+    background: linear-gradient(135deg, #17503a, #22876a);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(13, 53, 39, 0.3);
+}

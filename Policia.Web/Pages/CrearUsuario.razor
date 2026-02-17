@@ -1,181 +1,146 @@
 ﻿@page "/crear-usuario"
 @using Policia.Web.Models
-@using System.Net.Http.Headers
 @inject HttpClient Http
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavManager
 
 <PageTitle>Crear Usuario</PageTitle>
 
-<div class="container mt-4">
-    <h2>⚙️ Crear Usuario</h2>
-    <hr />
+<div class="page-header">
+    <div>
+        <h2 class="page-title">⚙️ Crear Usuario</h2>
+        <span class="page-subtitle">Asignar acceso al sistema a un efectivo policial</span>
+    </div>
+    <button class="btn-volver" @onclick='() => NavManager.NavigateTo("/listar-usuarios")'>
+        ← Volver al listado
+    </button>
+</div>
 
-    @* ──────────────────────────────────────────────
-        SECCIÓN 1: BUSCAR POLICÍA POR CIP
-        El admin escribe el CIP y hace click en "Buscar"
-       ────────────────────────────────────────────── *@
-    <div class="card mb-4">
-        <div class="card-header bg-dark text-white">
-            🔍 Paso 1: Buscar Policía por CIP
+@* ══════════════════════════════════════════
+   PASO 1: BUSCAR POLICÍA POR CIP
+   ══════════════════════════════════════════ *@
+<div class="form-card">
+    <div class="form-section">
+        <h3 class="section-title">🔍 Paso 1: Buscar Policía por CIP</h3>
+        <div class="search-row">
+            <input @bind="cipBusqueda" class="search-input"
+                   placeholder="Ingrese el CIP del policía..." maxlength="8" />
+            <button class="btn-buscar" @onclick="BuscarPersonal" disabled="@buscando">
+                @if (buscando)
+                {
+                    <span class="btn-spinner"></span>
+                    <span>Buscando...</span>
+                }
+                else
+                {
+                    <span>🔍 Buscar</span>
+                }
+            </button>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-8">
-                    @* 
-                        @bind="cipBusqueda"
-                        Lo que el admin escribe aquí se guarda automáticamente
-                        en la variable cipBusqueda del código C#
-                    *@
-                    <input @bind="cipBusqueda" class="form-control"
-                           placeholder="Ingrese el CIP del policía..." maxlength="8" />
-                </div>
-                <div class="col-md-4">
-                    @*
-                        @onclick="BuscarPersonal"
-                        Cuando el admin hace click, se ejecuta el método BuscarPersonal()
-                        disabled="@buscando" → Se deshabilita mientras busca (evita doble click)
-                    *@
-                    <button class="btn btn-primary w-100" @onclick="BuscarPersonal" disabled="@buscando">
-                        @if (buscando)
-                        {
-                            <span>🔄 Buscando...</span>
-                        }
-                        else
-                        {
-                            <span>🔍 Buscar</span>
-                        }
-                    </button>
-                </div>
-            </div>
 
-            @* Mensaje de error si el CIP no se encontró *@
-            @if (!string.IsNullOrEmpty(mensajeBusqueda))
-            {
-                <div class="alert alert-warning mt-3">@mensajeBusqueda</div>
-            }
-        </div>
+        @if (!string.IsNullOrEmpty(mensajeBusqueda))
+        {
+            <div class="form-mensaje error">@mensajeBusqueda</div>
+        }
     </div>
 
-    @* ──────────────────────────────────────────────
-        SECCIÓN 2: DATOS DEL POLICÍA ENCONTRADO + FORMULARIO
-        Solo se muestra cuando personalEncontrado NO es null
-        Es decir, cuando la búsqueda fue exitosa
-       ────────────────────────────────────────────── *@
+    @* ══════════════════════════════════════════
+       PASO 2: DATOS DEL POLICÍA ENCONTRADO
+       ══════════════════════════════════════════ *@
     @if (personalEncontrado != null)
     {
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                ✅ Paso 2: Datos del Policía Encontrado
-            </div>
-            <div class="card-body">
-                @*
-                    Aquí mostramos los datos que vinieron de BD_RRHH
-                    El operador ?. significa "si no es null, accede a la propiedad"
-                    Si IdGradoNavigation es null, no explota → simplemente no muestra nada
-                *@
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Nombres:</strong> @personalEncontrado.Nombres @personalEncontrado.Apellidos
-                    </div>
-                    <div class="col-md-6">
-                        <strong>DNI:</strong> @personalEncontrado.Dni
-                    </div>
+        <div class="form-section">
+            <h3 class="section-title">✅ Paso 2: Datos del Policía Encontrado</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Nombres</span>
+                    <span class="info-valor">@personalEncontrado.Nombres @personalEncontrado.Apellidos</span>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <strong>Grado:</strong> @personalEncontrado.IdGradoNavigation?.Nombre
-                    </div>
-                    <div class="col-md-4">
-                        <strong>Unidad:</strong> @personalEncontrado.IdUnidadActualNavigation?.Nombre
-                    </div>
-                    <div class="col-md-4">
-                        <strong>Situación:</strong> @personalEncontrado.IdSituacionNavigation?.Nombre
-                    </div>
+                <div class="info-item">
+                    <span class="info-label">DNI</span>
+                    <span class="info-valor">@personalEncontrado.Dni</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Grado</span>
+                    <span class="info-valor">@(personalEncontrado.IdGradoNavigation?.Nombre ?? "—")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Unidad</span>
+                    <span class="info-valor">@(personalEncontrado.IdUnidadActualNavigation?.Nombre ?? "—")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Situación</span>
+                    <span class="info-valor">@(personalEncontrado.IdSituacionNavigation?.Nombre ?? "—")</span>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                🔐 Paso 3: Asignar Credenciales
-            </div>
-            <div class="card-body">
-                @* INPUT: Contraseña *@
-                <div class="mb-3">
-                    <label class="form-label">Contraseña:</label>
-                    <input @bind="password" type="password" class="form-control"
-                           placeholder="Ingrese la contraseña..." />
+        @* ══════════════════════════════════════════
+           PASO 3: ASIGNAR CREDENCIALES
+           ══════════════════════════════════════════ *@
+        <div class="form-section">
+            <h3 class="section-title">🔐 Paso 3: Asignar Credenciales</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Contraseña *</label>
+                    <input @bind="password" type="password" placeholder="Ingrese la contraseña..." />
                 </div>
-
-                @* INPUT: Confirmar contraseña *@
-                <div class="mb-3">
-                    <label class="form-label">Confirmar Contraseña:</label>
-                    <input @bind="confirmarPassword" type="password" class="form-control"
-                           placeholder="Confirme la contraseña..." />
+                <div class="form-group">
+                    <label>Confirmar Contraseña *</label>
+                    <input @bind="confirmarPassword" type="password" placeholder="Confirme la contraseña..." />
                 </div>
-
-                @* 
-                    SELECT: Rol
-                    <select> con @bind="idRolSeleccionado"
-                    Lo que el admin selecciona se guarda en idRolSeleccionado
-                    Los valores (1, 2) deben coincidir con los IdRol de tu tabla Rol
-                *@
-                <div class="mb-3">
-                    <label class="form-label">Rol:</label>
-                    <select @bind="idRolSeleccionado" class="form-select">
+                <div class="form-group">
+                    <label>Rol *</label>
+                    <select @bind="idRolSeleccionado">
                         <option value="0">-- Seleccione un rol --</option>
-                        <option value="1">Administrador</option>
-                        <option value="2">Operador</option>
+                        @foreach (var r in roles)
+                        {
+                            <option value="@r.IdRol">@r.Nombre</option>
+                        }
                     </select>
                 </div>
-
-                @* BOTÓN: Crear Usuario *@
-                <button class="btn btn-success w-100" @onclick="CrearUsuarioDTO" disabled="@creando">
-                    @if (creando)
-                    {
-                        <span>🔄 Creando usuario...</span>
-                    }
-                    else
-                    {
-                        <span>✅ Crear Usuario</span>
-                    }
-                </button>
-
-                @* Mensajes de éxito o error *@
-                @if (!string.IsNullOrEmpty(mensajeCreacion))
-                {
-                    <div class="alert @claseMensaje mt-3">@mensajeCreacion</div>
-                }
             </div>
         </div>
+
+        <div class="form-actions">
+            <button class="btn-guardar" @onclick="CrearUsuarioSubmit" disabled="@creando">
+                @if (creando)
+                {
+                    <span class="btn-spinner"></span>
+                    <span>Creando usuario...</span>
+                }
+                else
+                {
+                    <span>✅ Crear Usuario</span>
+                }
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeCreacion))
+        {
+            <div class="form-mensaje @claseMensaje">@mensajeCreacion</div>
+        }
     }
 </div>
 
 @code {
-    // ──────────────────────────────────────────────
-    // VARIABLES DE LA PÁGINA
-    // ──────────────────────────────────────────────
+    // Variables de búsqueda
+    string cipBusqueda = "";
+    PersonalBuscadoDTO? personalEncontrado = null;
+    string mensajeBusqueda = "";
+    bool buscando = false;
 
-    // Variables para la BÚSQUEDA
-    string cipBusqueda = "";                           // Lo que el admin escribe en el input de búsqueda
-    PersonalBuscadoDTO? personalEncontrado = null;     // Datos del policía encontrado (null si no se buscó aún)
-    string mensajeBusqueda = "";                       // Mensaje de error/info de la búsqueda
-    bool buscando = false;                             // true mientras se está buscando
+    // Variables de creación
+    string password = "";
+    string confirmarPassword = "";
+    int idRolSeleccionado = 0;
+    string mensajeCreacion = "";
+    string claseMensaje = "";
+    bool creando = false;
 
-    // Variables para la CREACIÓN
-    string password = "";                              // Contraseña que el admin escribe
-    string confirmarPassword = "";                     // Confirmar contraseña
-    int idRolSeleccionado = 0;                         // Rol seleccionado en el <select>
-    string mensajeCreacion = "";                       // Mensaje después de crear
-    string claseMensaje = "";                          // Clase CSS del mensaje (verde=éxito, rojo=error)
-    bool creando = false;                              // true mientras se está creando
+    // Roles dinámicos desde la API
+    List<RolDTO> roles = new();
 
-    // ──────────────────────────────────────────────
-    // AL CARGAR LA PÁGINA: Verificar que hay token
-    // ──────────────────────────────────────────────
-    // Esto es igual que en Home.razor y MisArmas.razor
-    // Si no hay token, redirigimos al login
     protected override async Task OnInitializedAsync()
     {
         var token = await LocalStorage.GetItemAsync<string>("token_policial");
@@ -186,23 +151,23 @@
             return;
         }
 
-        // Configurar el HttpClient con el token para todas las peticiones
-        Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        // Cargar roles desde la API
+        try
+        {
+            roles = await Http.GetFromJsonAsync<List<RolDTO>>("/seguridad/Roles") ?? new();
+        }
+        catch
+        {
+            // Si falla, los roles quedan vacíos y el select mostrará solo "Seleccione..."
+        }
     }
 
-    // ──────────────────────────────────────────────
-    // MÉTODO 1: BUSCAR POLICÍA POR CIP
-    // ──────────────────────────────────────────────
-    // Se ejecuta cuando el admin hace click en "Buscar"
-    // Llama a: GET /rrhh/Personal/buscar-cip/12345678
     async Task BuscarPersonal()
     {
-        // Limpiar resultados anteriores
         personalEncontrado = null;
         mensajeBusqueda = "";
         mensajeCreacion = "";
 
-        // Validar que el admin haya escrito algo
         if (string.IsNullOrWhiteSpace(cipBusqueda))
         {
             mensajeBusqueda = "⚠️ Ingrese un CIP para buscar.";
@@ -213,15 +178,10 @@
 
         try
         {
-            // Llamar al API de RRHH a través del Gateway
-            // La ruta es: /rrhh/Personal/buscar-cip/{cip}
-            //   - "rrhh" → ocelot.json lo redirige a Policia.RRHH.API (puerto 7120)
-            //   - "Personal/buscar-cip/{cip}" → llega al PersonalController.BuscarPorCip()
             var respuesta = await Http.GetAsync($"rrhh/Personal/buscar-cip/{cipBusqueda}");
 
             if (respuesta.IsSuccessStatusCode)
             {
-                // Si encontró al policía, deserializamos el JSON a nuestro DTO
                 personalEncontrado = await respuesta.Content.ReadFromJsonAsync<PersonalBuscadoDTO>();
             }
             else if (respuesta.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -244,38 +204,28 @@
         }
     }
 
-    // ──────────────────────────────────────────────
-    // MÉTODO 2: CREAR EL USUARIO
-    // ──────────────────────────────────────────────
-    // Se ejecuta cuando el admin hace click en "Crear Usuario"
-    // Llama a: POST /seguridad/CrearUsuario
-    async Task CrearUsuarioDTO()
+    async Task CrearUsuarioSubmit()
     {
         mensajeCreacion = "";
 
-        // ── VALIDACIONES DEL FORMULARIO ──
-
-        // ¿Escribió la contraseña?
         if (string.IsNullOrWhiteSpace(password))
         {
             mensajeCreacion = "⚠️ Ingrese una contraseña.";
-            claseMensaje = "alert-warning";
+            claseMensaje = "error";
             return;
         }
 
-        // ¿Las contraseñas coinciden?
         if (password != confirmarPassword)
         {
             mensajeCreacion = "⚠️ Las contraseñas no coinciden.";
-            claseMensaje = "alert-warning";
+            claseMensaje = "error";
             return;
         }
 
-        // ¿Seleccionó un rol?
         if (idRolSeleccionado == 0)
         {
             mensajeCreacion = "⚠️ Seleccione un rol.";
-            claseMensaje = "alert-warning";
+            claseMensaje = "error";
             return;
         }
 
@@ -283,25 +233,21 @@
 
         try
         {
-            // Armamos el objeto que vamos a enviar al API
             var request = new CrearUsuarioRequest
             {
-                Cip = personalEncontrado!.Cip,              // CIP del policía encontrado
-                IdPersonal = personalEncontrado.IdPersonal,  // ID del policía en BD_RRHH
-                Password = password,                         // Contraseña que escribió el admin
-                IdRol = idRolSeleccionado                    // Rol seleccionado
+                Cip = personalEncontrado!.Cip,
+                IdPersonal = personalEncontrado.IdPersonal,
+                Password = password,
+                IdRol = idRolSeleccionado
             };
 
-            // Enviamos POST al Gateway
-            // "seguridad/CrearUsuario" → ocelot.json → Identity.API → AuthController.CrearUsuario()
             var respuesta = await Http.PostAsJsonAsync("seguridad/CrearUsuario", request);
 
             if (respuesta.IsSuccessStatusCode)
             {
                 mensajeCreacion = $"✅ Usuario creado exitosamente para {personalEncontrado.Nombres} {personalEncontrado.Apellidos}";
-                claseMensaje = "alert-success";
+                claseMensaje = "exito";
 
-                // Limpiar el formulario para crear otro
                 personalEncontrado = null;
                 cipBusqueda = "";
                 password = "";
@@ -310,20 +256,19 @@
             }
             else if (respuesta.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
-                // 409 Conflict → Ya existe un usuario con ese CIP
                 mensajeCreacion = "⚠️ Este policía ya tiene una cuenta de usuario.";
-                claseMensaje = "alert-warning";
+                claseMensaje = "error";
             }
             else
             {
                 mensajeCreacion = "❌ Error al crear el usuario. Código: " + respuesta.StatusCode;
-                claseMensaje = "alert-danger";
+                claseMensaje = "error";
             }
         }
         catch (Exception ex)
         {
             mensajeCreacion = "❌ Error de conexión con el Gateway.";
-            claseMensaje = "alert-danger";
+            claseMensaje = "error";
             Console.WriteLine(ex.Message);
         }
         finally

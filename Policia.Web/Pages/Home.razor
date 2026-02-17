@@ -2,8 +2,6 @@
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavManager
 @inject HttpClient Http
-@using System.Net.Http.Headers
-@using System.Text.Json
 
 <PageTitle>Sistema Policial - Inicio</PageTitle>
 
@@ -212,7 +210,6 @@ else
 
         nombreUsuario = await LocalStorage.GetItemAsync<string>("usuario_nombre") ?? "Usuario";
         idPersonal = await LocalStorage.GetItemAsync<int>("id_personal");
-        Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         cargando = false;
 
@@ -280,6 +277,7 @@ else
         await LocalStorage.RemoveItemAsync("token_policial");
         await LocalStorage.RemoveItemAsync("usuario_nombre");
         await LocalStorage.RemoveItemAsync("id_personal");
+        await LocalStorage.RemoveItemAsync("id_rol");
         NavManager.NavigateTo("/login", true);
     }
 
@@ -293,6 +291,6 @@ else
     public class UsuarioResumenDTO
     {
         public int IdUsuario { get; set; }
-        public bool Estado { get; set; }
+        public bool? Estado { get; set; }
     }
 }

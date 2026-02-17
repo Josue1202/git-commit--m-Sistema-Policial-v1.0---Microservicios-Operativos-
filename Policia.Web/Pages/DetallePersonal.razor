@@ -2,7 +2,6 @@
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavManager
 @inject HttpClient Http
-@using System.Net.Http.Headers
 
 <PageTitle>Detalle Personal</PageTitle>
 
@@ -129,7 +128,6 @@ else if (personal != null)
         {
             var token = await LocalStorage.GetItemAsync<string>("token_policial");
             if (string.IsNullOrEmpty(token)) { NavManager.NavigateTo("/login"); return; }
-            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             await Task.WhenAll(CargarPersonal(), CargarHistorial());
         }

@@ -68,9 +68,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-//esto es nuevo no recuerdo porque lo implemente
-app.UseRouting();
-
 app.UseHttpsRedirection();
 
 // --- ACTIVACIÓN DE LOS FILTROS (CÓDIGO NUEVO AGREGADO) ---

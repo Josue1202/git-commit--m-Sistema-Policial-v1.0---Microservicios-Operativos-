@@ -47,36 +47,51 @@
                 <NavLink class="nav-link" href="mis-armas" @onclick="CollapseOnMobile">
                     <span class="nav-sub-dot"></span> Mi Armamento
                 </NavLink>
+                @if (esAdmin)
+                {
+                    <NavLink class="nav-link" href="inventario-armas" @onclick="CollapseOnMobile">
+                        <span class="nav-sub-dot"></span> Inventario General
+                    </NavLink>
+                    <NavLink class="nav-link" href="arma/crear" @onclick="CollapseOnMobile">
+                        <span class="nav-sub-dot"></span> Registrar Arma
+                    </NavLink>
+                }
             </div>
         </div>
 
-        <!-- ═══ ADMINISTRACIÓN ═══ -->
-        <div class="nav-section-title px-3">ADMINISTRACIÓN</div>
+        <!-- ═══ ADMINISTRACIÓN (solo Admin) ═══ -->
+        @if (esAdmin)
+        {
+            <div class="nav-section-title px-3">ADMINISTRACIÓN</div>
 
-        <div class="nav-group px-3">
-            <button class="nav-group-btn" @onclick="ToggleUsuarios">
-                <span class="nav-group-icon">🔐</span>
-                <span class="nav-group-text">Usuarios</span>
-                <span class="nav-group-arrow @(usuariosOpen ? "open" : "")">›</span>
-            </button>
-            <div class="nav-group-items @(usuariosOpen ? "expanded" : "")">
-                <NavLink class="nav-link" href="crear-usuario" @onclick="CollapseOnMobile">
-                    <span class="nav-sub-dot"></span> Crear Usuario
-                </NavLink>
-                <NavLink class="nav-link" href="listar-usuarios" @onclick="CollapseOnMobile">
-                    <span class="nav-sub-dot"></span> Listar Usuarios
-                </NavLink>
+            <div class="nav-group px-3">
+                <button class="nav-group-btn" @onclick="ToggleUsuarios">
+                    <span class="nav-group-icon">🔐</span>
+                    <span class="nav-group-text">Usuarios</span>
+                    <span class="nav-group-arrow @(usuariosOpen ? "open" : "")">›</span>
+                </button>
+                <div class="nav-group-items @(usuariosOpen ? "expanded" : "")">
+                    <NavLink class="nav-link" href="crear-usuario" @onclick="CollapseOnMobile">
+                        <span class="nav-sub-dot"></span> Crear Usuario
+                    </NavLink>
+                    <NavLink class="nav-link" href="listar-usuarios" @onclick="CollapseOnMobile">
+                        <span class="nav-sub-dot"></span> Listar Usuarios
+                    </NavLink>
+                </div>
             </div>
-        </div>
+        }
 
     </nav>
 </div>
+
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 @code {
     private bool collapseNavMenu = true;
     private bool personalOpen = false;
     private bool armamentoOpen = false;
     private bool usuariosOpen = false;
+    private bool esAdmin = false;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
@@ -86,4 +101,10 @@
     private void TogglePersonal() => personalOpen = !personalOpen;
     private void ToggleArmamento() => armamentoOpen = !armamentoOpen;
     private void ToggleUsuarios() => usuariosOpen = !usuariosOpen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var idRol = await LocalStorage.GetItemAsync<int>("id_rol");
+        esAdmin = (idRol == 1);
+    }
 }

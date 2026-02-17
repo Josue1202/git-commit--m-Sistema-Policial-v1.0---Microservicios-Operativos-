@@ -131,9 +131,16 @@
             {
                 var resultado = await respuesta.Content.ReadFromJsonAsync<LoginResponse>();
 
+                if (resultado?.Token == null)
+                {
+                    mensajeError = "❌ Respuesta inválida del servidor.";
+                    return;
+                }
+
                 await LocalStorage.SetItemAsync("token_policial", resultado.Token);
                 await LocalStorage.SetItemAsync("usuario_nombre", resultado.Usuario);
                 await LocalStorage.SetItemAsync("id_personal", resultado.IdPersonal);
+                await LocalStorage.SetItemAsync("id_rol", resultado.IdRol);
 
                 NavManager.NavigateTo("/", true);
             }

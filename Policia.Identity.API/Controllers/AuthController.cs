@@ -51,8 +51,25 @@ namespace Policia.Identity.API.Controllers
                 return Unauthorized("Su usuario está DADO DE BAJA. No puede entrar.");
             }
 
-            // 4. Si la contraseña no coincide, adiós.
-            if (usuario.PasswordHash != request.Password)
+            // 4. Verificar contraseña con BCrypt (migración automática de texto plano)
+            bool passwordValida;
+            if (usuario.PasswordHash.StartsWith("$2"))
+            {
+                // La contraseña ya está hasheada con BCrypt → verificar normalmente
+                passwordValida = BCrypt.Net.BCrypt.Verify(request.Password, usuario.PasswordHash);
+            }
+            else
+            {
+                // Contraseña legacy en texto plano → verificar y migrar a BCrypt
+                passwordValida = usuario.PasswordHash == request.Password;
+                if (passwordValida)
+                {
+                    usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            if (!passwordValida)
             {
                 return Unauthorized("Contraseña incorrecta.");
             }
@@ -69,7 +86,7 @@ namespace Policia.Identity.API.Controllers
                 Usuario = usuario.Cip,
                 IdPersonal = usuario.IdPersonal,
                 IdRol = usuario.IdRol,
-                expiracion = DateTime.Now.AddMinutes(60) //para que funcione el timepo de inactividad ps gilerto jjaj
+                expiracion = DateTime.Now.AddHours(2)
             });
         }
 
@@ -149,7 +166,7 @@ namespace Policia.Identity.API.Controllers
                 Cip = request.Cip,                    // CIP del policía
                 IdPersonal = request.IdPersonal,      // FK al policía en BD_RRHH
                 IdRol = request.IdRol,                // FK al rol (Admin, Operador, etc.)
-                PasswordHash = request.Password,      // Contraseña (por ahora en texto plano)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
 
                 // Datos automáticos (NO los llena el admin, los llenamos nosotros)
                 Estado = true,                        // Siempre inicia ACTIVO
@@ -207,6 +224,7 @@ namespace Policia.Identity.API.Controllers
                     u.Cip,
                     u.IdPersonal,
                     u.Estado,
+                    u.IdRol,
                     Rol = u.IdRolNavigation.Nombre, // "Administrador", "Operador", etc.
                     u.CreadoPor,
                     u.FechaCreacion,
@@ -300,6 +318,110 @@ namespace Policia.Identity.API.Controllers
             });
         }
 
+
+        // ==========================================
+        // ENDPOINT 6: OBTENER USUARIO POR ID
+        // ==========================================
+        // GET: api/Auth/ObtenerUsuario/5
+        //
+        // Devuelve los datos de UN solo usuario para llenar el formulario de edición
+        //
+        [Authorize]
+        [HttpGet("ObtenerUsuario/{id}")]
+        public async Task<IActionResult> ObtenerUsuario(int id)
+        {
+            var usuario = await _context.Usuarios
+                .Include(u => u.IdRolNavigation)
+                .FirstOrDefaultAsync(u => u.IdUsuario == id);
+
+            if (usuario == null)
+            {
+                return NotFound("Usuario no encontrado.");
+            }
+
+            return Ok(new
+            {
+                usuario.IdUsuario,
+                usuario.Cip,
+                usuario.IdPersonal,
+                usuario.IdRol,
+                Rol = usuario.IdRolNavigation.Nombre,
+                usuario.Estado,
+                usuario.CreadoPor,
+                usuario.FechaCreacion,
+                usuario.ModificadoPor,
+                usuario.FechaModificacion
+            });
+        }
+
+        // ==========================================
+        // ENDPOINT 7: EDITAR USUARIO
+        // ==========================================
+        // PUT: api/Auth/EditarUsuario/5
+        //
+        // Permite cambiar el Rol y opcionalmente resetear la contraseña
+        // El CIP y IdPersonal NO se modifican (son datos de identidad)
+        //
+        [Authorize]
+        [HttpPut("EditarUsuario/{id}")]
+        public async Task<IActionResult> EditarUsuario(int id, [FromBody] EditarUsuarioDTO request)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+
+            if (usuario == null)
+            {
+                return NotFound("Usuario no encontrado.");
+            }
+
+            // Validar que el rol exista
+            var existeRol = await _context.Rols.AnyAsync(r => r.IdRol == request.IdRol);
+            if (!existeRol)
+            {
+                return BadRequest("El rol especificado no existe.");
+            }
+
+            // Actualizar el rol
+            usuario.IdRol = request.IdRol;
+
+            // Si el admin envió una nueva contraseña, la hasheamos y actualizamos
+            if (!string.IsNullOrWhiteSpace(request.NuevaPassword))
+            {
+                usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NuevaPassword);
+            }
+
+            // Auditoría
+            usuario.ModificadoPor = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? "SISTEMA";
+            usuario.FechaModificacion = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Mensaje = $"✅ Usuario {usuario.Cip} editado correctamente.",
+                usuario.IdUsuario,
+                usuario.IdRol,
+                usuario.ModificadoPor,
+                usuario.FechaModificacion
+            });
+        }
+
+        // ==========================================
+        // ENDPOINT 8: LISTAR ROLES
+        // ==========================================
+        // GET: api/Auth/Roles
+        //
+        // Devuelve todos los roles para el dropdown del formulario
+        //
+        [Authorize]
+        [HttpGet("Roles")]
+        public async Task<IActionResult> ListarRoles()
+        {
+            var roles = await _context.Rols
+                .Select(r => new { r.IdRol, r.Nombre, r.Descripcion })
+                .ToListAsync();
+
+            return Ok(roles);
+        }
 
         // ==========================================
         // MÉTODO PRIVADO: GENERAR TOKEN (YA EXISTÍA)
