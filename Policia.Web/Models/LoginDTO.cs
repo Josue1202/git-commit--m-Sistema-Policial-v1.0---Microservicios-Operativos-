@@ -3,7 +3,7 @@
     // 1. LA MALETA DE IDA (Lo que envías para entrar)
     public class LoginRequest
     {
-        public string Usuario { get; set; } = "";
+        public string Cip { get; set; } = "";
         public string Password { get; set; } = "";
     }
 
@@ -13,6 +13,7 @@
         public string Mensaje { get; set; } = "";
         public string Token { get; set; } = ""; // <--- ¡AQUÍ LLEGARÁ TU PLACA!
         public string Usuario { get; set; } = "";
+        public int? IdPersonal { get; set; }
         public int IdRol { get; set; }
     }
 }

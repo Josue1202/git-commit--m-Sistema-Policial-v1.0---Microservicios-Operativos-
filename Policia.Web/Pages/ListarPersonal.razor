@@ -1,0 +1,255 @@
+@page "/personal"
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavManager
+@inject HttpClient Http
+
+<PageTitle>Personal - Listado</PageTitle>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2 class="page-title">👥 Gestión de Personal</h2>
+        <span class="page-subtitle">Recursos Humanos — PNP</span>
+    </div>
+    <button class="btn-crear" @onclick='() => NavManager.NavigateTo("/personal/crear")'>
+        <span>＋</span> Nuevo Personal
+    </button>
+</div>
+
+<!-- Filtros -->
+<div class="filtros-bar">
+    <div class="filtro-campo">
+        <input @bind="filtroBusqueda" @bind:event="oninput" class="filtro-input"
+               placeholder="🔍 Buscar por CIP, nombre o DNI..." />
+    </div>
+    <div class="filtro-campo">
+        <select @bind="filtroGrado" class="filtro-select">
+            <option value="">Todos los grados</option>
+            @foreach (var g in grados)
+            {
+                <option value="@g.Nombre">@g.Nombre</option>
+            }
+        </select>
+    </div>
+    <div class="filtro-campo">
+        <select @bind="filtroUnidad" class="filtro-select">
+            <option value="">Todas las unidades</option>
+            @foreach (var u in unidades)
+            {
+                <option value="@u.Nombre">@u.Nombre</option>
+            }
+        </select>
+    </div>
+    <div class="filtro-campo">
+        <select @bind="filtroSituacion" class="filtro-select">
+            <option value="">Todas las situaciones</option>
+            @foreach (var s in situaciones)
+            {
+                <option value="@s.Nombre">@s.Nombre</option>
+            }
+        </select>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Cargando personal...</span>
+    </div>
+}
+else if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="error-state">@mensajeError</div>
+}
+else
+{
+    <div class="tabla-container">
+        <table class="tabla-pnp">
+            <thead>
+                <tr>
+                    <th>CIP</th>
+                    <th>DNI</th>
+                    <th>Apellidos y Nombres</th>
+                    <th>Grado</th>
+                    <th>Unidad</th>
+                    <th>Situación</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in PersonalFiltrado)
+                {
+                    <tr>
+                        <td><strong>@p.Cip</strong></td>
+                        <td>@p.Dni</td>
+                        <td>@p.Apellidos, @p.Nombres</td>
+                        <td><span class="badge-grado">@p.IdGradoNavigation?.Nombre</span></td>
+                        <td>@p.IdUnidadActualNavigation?.Nombre</td>
+                        <td>
+                            @if (p.IdSituacionNavigation?.Nombre == "ACTIVIDAD")
+                            {
+                                <span class="badge-activo">ACTIVIDAD</span>
+                            }
+                            else
+                            {
+                                <span class="badge-retiro">@p.IdSituacionNavigation?.Nombre</span>
+                            }
+                        </td>
+                        <td>
+                            @if (p.Estado == true)
+                            {
+                                <span class="badge-activo">Activo</span>
+                            }
+                            else
+                            {
+                                <span class="badge-retiro">Inactivo</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="acciones-grupo">
+                                <button class="btn-accion ver" title="Ver detalle"
+                                        @onclick='() => NavManager.NavigateTo($"/personal/{p.IdPersonal}")'>
+                                    👁
+                                </button>
+                                <button class="btn-accion editar" title="Editar"
+                                        @onclick='() => NavManager.NavigateTo($"/personal/editar/{p.IdPersonal}")'>
+                                    ✏️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tabla-footer">
+        <span class="tabla-total">Total: <strong>@PersonalFiltrado.Count()</strong> efectivo(s)</span>
+        @if (PersonalFiltrado.Count() != listaPersonal.Count)
+        {
+            <span class="tabla-filtrado">de @listaPersonal.Count registrados</span>
+        }
+    </div>
+}
+
+@code {
+    List<PersonalDTO> listaPersonal = new();
+    List<GradoDTO> grados = new();
+    List<UnidadDTO> unidades = new();
+    List<SituacionDTO> situaciones = new();
+
+    bool cargando = true;
+    string mensajeError = "";
+
+    string filtroBusqueda = "";
+    string filtroGrado = "";
+    string filtroUnidad = "";
+    string filtroSituacion = "";
+
+    IEnumerable<PersonalDTO> PersonalFiltrado => listaPersonal.Where(p =>
+    {
+        if (!string.IsNullOrEmpty(filtroBusqueda))
+        {
+            var busq = filtroBusqueda.ToLower();
+            bool coincide = (p.Cip?.ToLower().Contains(busq) ?? false) ||
+                            (p.Dni?.ToLower().Contains(busq) ?? false) ||
+                            (p.Nombres?.ToLower().Contains(busq) ?? false) ||
+                            (p.Apellidos?.ToLower().Contains(busq) ?? false);
+            if (!coincide) return false;
+        }
+        if (!string.IsNullOrEmpty(filtroGrado) && p.IdGradoNavigation?.Nombre != filtroGrado)
+            return false;
+        if (!string.IsNullOrEmpty(filtroUnidad) && p.IdUnidadActualNavigation?.Nombre != filtroUnidad)
+            return false;
+        if (!string.IsNullOrEmpty(filtroSituacion) && p.IdSituacionNavigation?.Nombre != filtroSituacion)
+            return false;
+        return true;
+    });
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var token = await LocalStorage.GetItemAsync<string>("token_policial");
+            if (string.IsNullOrEmpty(token)) { NavManager.NavigateTo("/login"); return; }
+
+            var tareas = new[]
+            {
+                CargarPersonal(),
+                CargarGrados(),
+                CargarUnidades(),
+                CargarSituaciones()
+            };
+            await Task.WhenAll(tareas);
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "❌ Error al cargar datos: " + ex.Message;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    async Task CargarPersonal()
+    {
+        listaPersonal = await Http.GetFromJsonAsync<List<PersonalDTO>>("rrhh/Personal") ?? new();
+    }
+
+    async Task CargarGrados()
+    {
+        grados = await Http.GetFromJsonAsync<List<GradoDTO>>("rrhh/Personal/grados") ?? new();
+    }
+
+    async Task CargarUnidades()
+    {
+        unidades = await Http.GetFromJsonAsync<List<UnidadDTO>>("rrhh/Personal/unidades") ?? new();
+    }
+
+    async Task CargarSituaciones()
+    {
+        situaciones = await Http.GetFromJsonAsync<List<SituacionDTO>>("rrhh/Personal/situaciones") ?? new();
+    }
+
+    // ── DTOs ──
+    public class PersonalDTO
+    {
+        public int IdPersonal { get; set; }
+        public string? Cip { get; set; }
+        public string? Dni { get; set; }
+        public string? Nombres { get; set; }
+        public string? Apellidos { get; set; }
+        public DateOnly? FechaNacimiento { get; set; }
+        public string? Sexo { get; set; }
+        public int IdGrado { get; set; }
+        public int IdUnidadActual { get; set; }
+        public int IdSituacion { get; set; }
+        public DateOnly? FechaIngreso { get; set; }
+        public bool? Estado { get; set; }
+        public GradoDTO? IdGradoNavigation { get; set; }
+        public UnidadDTO? IdUnidadActualNavigation { get; set; }
+        public SituacionDTO? IdSituacionNavigation { get; set; }
+    }
+
+    public class GradoDTO
+    {
+        public int IdGrado { get; set; }
+        public string? Nombre { get; set; }
+        public int Jerarquia { get; set; }
+    }
+
+    public class UnidadDTO
+    {
+        public int IdUnidad { get; set; }
+        public string? Nombre { get; set; }
+        public string? Siglas { get; set; }
+    }
+
+    public class SituacionDTO
+    {
+        public int IdSituacion { get; set; }
+        public string? Nombre { get; set; }
+    }
+}

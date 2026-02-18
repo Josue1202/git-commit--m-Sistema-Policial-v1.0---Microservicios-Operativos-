@@ -82,14 +82,7 @@ var app = builder.Build();
 // ¿Por qué? Porque primero revisamos el pasaporte (CORS) antes de dejarlo entrar al sistema (Ocelot).
 app.UseCors("PermitirFrontend");
 
-// NUEVO: ACTIVAMOS LA AUTENTICACIÓN
-// Esto enciende el scanner. Sin esto, la configuración de arriba no sirve.
-app.UseAuthentication();
-
-// --- 5. ACTIVAMOS OCELOT (EL TRÁFICO) ---
-// El 'await' es importante porque Ocelot trabaja asíncrono para no trabar el servidor.
-// Aquí es donde el Gateway empieza a redirigir las llamadas a RRHH, Logística, etc.
-await app.UseOcelot();
+app.UseHttpsRedirection();
 
 // Configuración para entorno de desarrollo (Swagger)
 if (app.Environment.IsDevelopment())
@@ -97,10 +90,18 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// NUEVO: ACTIVAMOS LA AUTENTICACIÓN
+// Esto enciende el scanner. Sin esto, la configuración de arriba no sirve.
+app.UseAuthentication();
 
+//PARA LA AUTORIZACION
 app.UseAuthorization();
 
 app.MapControllers();
+
+// --- 5. ACTIVAMOS OCELOT (EL TRÁFICO) ---
+// El 'await' es importante porque Ocelot trabaja asíncrono para no trabar el servidor.
+// Aquí es donde el Gateway empieza a redirigir las llamadas a RRHH, Logística, etc.
+await app.UseOcelot();
 
 app.Run();

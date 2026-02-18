@@ -1,0 +1,217 @@
+﻿@page "/listar-usuarios"
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavManager
+@inject HttpClient Http
+@using Policia.Web.Models
+
+<PageTitle>Gestión de Usuarios</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👥 Gestión de Usuarios</h2>
+        <button class="btn btn-success" @onclick='() => NavManager.NavigateTo("/crear-usuario")'>
+            ➕ Crear Usuario
+        </button>
+    </div>
+
+    @if (cargando)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando usuarios...</p>
+        </div>
+    }
+    else if (mensaje != "")
+    {
+        <div class="alert alert-danger">@mensaje</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>CIP</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Creado Por</th>
+                        <th>Fecha Creación</th>
+                        <th>Modificado Por</th>
+                        <th>Fecha Modificación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in usuarios)
+                    {
+                        <tr>
+                            <td>@u.IdUsuario</td>
+                            <td><strong>@u.Cip</strong></td>
+                            <td>
+                                <span class="badge bg-info">@u.Rol</span>
+                            </td>
+                            <td>
+                                @if (u.Estado == true)
+                                {
+                                    <span class="badge bg-success">🟢 Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">🔴 Inactivo</span>
+                                }
+                            </td>
+                            <td>@u.CreadoPor</td>
+                            <td>@(u.FechaCreacion?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@(u.ModificadoPor ?? "-")</td>
+                            <td>@(u.FechaModificacion?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm me-1"
+                                        @onclick='() => NavManager.NavigateTo($"/editar-usuario/{u.IdUsuario}")'>
+                                    ✏️ Editar
+                                </button>
+                                @if (u.Estado == true)
+                                {
+                                    <button class="btn btn-warning btn-sm"
+                                            @onclick="() => DesactivarUsuario(u.IdUsuario, u.Cip)"
+                                            disabled="@procesando">
+                                        ⛔ Desactivar
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-success btn-sm"
+                                            @onclick="() => ReactivarUsuario(u.IdUsuario, u.Cip)"
+                                            disabled="@procesando">
+                                        ✅ Reactivar
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-muted">Total: @usuarios.Count usuario(s)</p>
+
+        @if (mensajeAccion != "")
+        {
+            <div class="alert @(exitoAccion ? "alert-success" : "alert-danger") mt-3">
+                @mensajeAccion
+            </div>
+        }
+    }
+</div>
+
+@code {
+    bool cargando = true;
+    bool procesando = false;
+    string mensaje = "";
+    string mensajeAccion = "";
+    bool exitoAccion = false;
+    List<UsuarioListadoDTO> usuarios = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await LocalStorage.GetItemAsync<string>("token_policial");
+
+        if (string.IsNullOrEmpty(token))
+        {
+            NavManager.NavigateTo("/login", true);
+            return;
+        }
+
+        await CargarUsuarios();
+    }
+
+    async Task CargarUsuarios()
+    {
+        cargando = true;
+        mensaje = "";
+
+        try
+        {
+            var response = await Http.GetAsync("/seguridad/Listar");
+
+            if (response.IsSuccessStatusCode)
+            {
+                usuarios = await response.Content.ReadFromJsonAsync<List<UsuarioListadoDTO>>() ?? new();
+            }
+            else
+            {
+                mensaje = $"Error al cargar usuarios: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+        }
+
+        cargando = false;
+    }
+
+    async Task DesactivarUsuario(int id, string cip)
+    {
+        procesando = true;
+        mensajeAccion = "";
+
+        try
+        {
+            var response = await Http.PutAsync($"/seguridad/Desactivar/{id}", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                mensajeAccion = $"⛔ Usuario {cip} desactivado correctamente.";
+                exitoAccion = true;
+                await CargarUsuarios(); // Recargar la tabla
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                mensajeAccion = $"Error: {error}";
+                exitoAccion = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeAccion = $"Error de conexión: {ex.Message}";
+            exitoAccion = false;
+        }
+
+        procesando = false;
+    }
+
+    async Task ReactivarUsuario(int id, string cip)
+    {
+        procesando = true;
+        mensajeAccion = "";
+
+        try
+        {
+            var response = await Http.PutAsync($"/seguridad/Reactivar/{id}", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                mensajeAccion = $"✅ Usuario {cip} reactivado correctamente.";
+                exitoAccion = true;
+                await CargarUsuarios();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                mensajeAccion = $"Error: {error}";
+                exitoAccion = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeAccion = $"Error de conexión: {ex.Message}";
+            exitoAccion = false;
+        }
+
+        procesando = false;
+    }
+}

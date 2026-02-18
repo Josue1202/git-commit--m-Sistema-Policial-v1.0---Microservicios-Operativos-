@@ -21,28 +21,35 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 });
 
 
-// --- ZONA DE SEGURIDAD (CÓDIGO NUEVO AGREGADO) ---
+// --- INICIO DE LA ZONA DE SEGURIDAD (CÓDIGO NUEVO AGREGADO) ---
 
-// A. "Oye sistema, activa el servicio de AUTENTICACIÓN (Revisión de Identidad)"
+// A. LEVANTAMOS EL SERVICIO DE AUTENTICACIÓN
+// Le decimos al sistema: "Oye, prepárate para revisar credenciales usando JWT".
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // B. "Aquí están las REGLAS para los guardias de RRHH:"
+        // B. DEFINIMOS LAS REGLAS DEL GUARDIA
+        // Aquí le decimos al guardia QUÉ debe mirar con lupa en el Token.
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            // 1. ¿Validar quién emitió el token? (Debe ser Policia.Identity)
+            // 1. ¿Validar el Emisor (Issuer)?
+            // "Sí. Revisa que el token diga 'Policia.Identity'. Si dice otra cosa, es falso."
             ValidateIssuer = true,
 
-            // 2. ¿Validar para quién es? (Debe ser Policia.Sistemas)
+            // 2. ¿Validar la Audiencia (Audience)?
+            // "Sí. Revisa que el token sea para 'Policia.Sistemas'. Si es para otra app, no entra."
             ValidateAudience = true,
 
-            // 3. ¿Validar si ya venció? (Si expiró, no entra)
+            // 3. ¿Validar la Duración (Lifetime)?
+            // "Sí. Fíjate en la fecha de vencimiento. Si ya pasó, no lo dejes entrar."
             ValidateLifetime = true,
 
-            // 4. ¿Validar la Firma Secreta? (CRUCIAL: Revisa la clave maestra)
+            // 4. ¿Validar la Firma (SigningKey)? ¡LA MÁS IMPORTANTE!
+            // "Sí. Verifica que la firma digital coincida con nuestra CLAVE SECRETA."
             ValidateIssuerSigningKey = true,
 
-            // C. LEEMOS LOS DATOS DEL ARCHIVO appsettings.json
+            // C. LEEMOS LOS VALORES REALES DESDE appsettings.json
+            // Aquí conectamos con el archivo de configuración para sacar la clave secreta y los nombres.
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
@@ -50,7 +57,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// --- FIN ZONA DE SEGURIDAD ---
+// --- FIN DE LA ZONA DE SEGURIDAD --
 
 
 builder.Services.AddOpenApi();
@@ -65,13 +72,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// --- ACTIVACIÓN DE LOS FILTROS (CÓDIGO NUEVO AGREGADO) ---
 
-// --- ACTIVAR LOS GUARDIAS EN ORDEN (NUEVO) ---
-
-// D. PRIMERO: Authentication (¿Quién eres? Muestra tu placa)
+// D. ACTIVAMOS AL GUARDIA (Authentication)
+// OJO: Esto DEBE ir antes de Authorization.
+// Significa: "¿Quién eres? Déjame ver tu placa y verificar que no sea falsa".
 app.UseAuthentication();
 
-// E. SEGUNDO: Authorization (¿Tienes permiso para pasar?)
+// E. ACTIVAMOS LOS PERMISOS (Authorization) - (YA LO TENÍAS, PERO AHORA FUNCIONA CON EL DE ARRIBA)
+// Significa: "Ya sé quién eres. Ahora voy a ver si tienes permiso para entrar aquí".
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,0 +1,183 @@
+@page "/inventario-armas"
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavManager
+@inject HttpClient Http
+
+<PageTitle>Inventario de Armas - PNP</PageTitle>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h2 class="page-title">🔫 Inventario de Armamento</h2>
+        <span class="page-subtitle">Logística — PNP</span>
+    </div>
+    <button class="btn-crear" @onclick='() => NavManager.NavigateTo("/arma/crear")'>
+        <span>＋</span> Registrar Arma
+    </button>
+</div>
+
+<div class="filtros-bar">
+    <div class="filtro-campo">
+        <input @bind="filtroBusqueda" @bind:event="oninput" class="filtro-input"
+               placeholder="🔍 Buscar por serie, marca o modelo..." />
+    </div>
+    <div class="filtro-campo">
+        <select @bind="filtroTipo" class="filtro-select">
+            <option value="">Todos los tipos</option>
+            @foreach (var t in tipos)
+            {
+                <option value="@t.Nombre">@t.Nombre</option>
+            }
+        </select>
+    </div>
+    <div class="filtro-campo">
+        <select @bind="filtroEstado" class="filtro-select">
+            <option value="">Todos los estados</option>
+            <option value="OPERATIVO">Operativo</option>
+            <option value="ASIGNADO">Asignado</option>
+            <option value="EN MANTENIMIENTO">En Mantenimiento</option>
+            <option value="DADO DE BAJA">Dado de Baja</option>
+        </select>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Cargando inventario...</span>
+    </div>
+}
+else if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="error-state">@mensajeError</div>
+}
+else
+{
+    <div class="tabla-container">
+        <table class="tabla-pnp">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>N° Serie</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in ArmasFiltradas)
+                {
+                    <tr>
+                        <td><span class="badge-tipo">@a.IdTipoNavigation?.Nombre</span></td>
+                        <td>@a.Marca</td>
+                        <td>@(a.Modelo ?? "—")</td>
+                        <td><strong>@a.Serie</strong></td>
+                        <td>
+                            @if (a.Estado == "OPERATIVO")
+                            {
+                                <span class="badge-activo">OPERATIVO</span>
+                            }
+                            else if (a.Estado == "ASIGNADO")
+                            {
+                                <span class="badge-asignado">ASIGNADO</span>
+                            }
+                            else
+                            {
+                                <span class="badge-retiro">@a.Estado</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="acciones-grupo">
+                                <button class="btn-accion editar" title="Editar"
+                                        @onclick='() => NavManager.NavigateTo($"/arma/editar/{a.IdArma}")'>
+                                    ✏️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tabla-footer">
+        <span class="tabla-total">Total: <strong>@ArmasFiltradas.Count()</strong> arma(s)</span>
+        @if (ArmasFiltradas.Count() != listaArmas.Count)
+        {
+            <span class="tabla-filtrado">de @listaArmas.Count registradas</span>
+        }
+    </div>
+}
+
+@code {
+    List<ArmaDTO> listaArmas = new();
+    List<TipoArmaDTO> tipos = new();
+    bool cargando = true;
+    string mensajeError = "";
+
+    string filtroBusqueda = "";
+    string filtroTipo = "";
+    string filtroEstado = "";
+
+    IEnumerable<ArmaDTO> ArmasFiltradas => listaArmas.Where(a =>
+    {
+        if (!string.IsNullOrEmpty(filtroBusqueda))
+        {
+            var busq = filtroBusqueda.ToLower();
+            bool coincide = (a.Serie?.ToLower().Contains(busq) ?? false) ||
+                            (a.Marca?.ToLower().Contains(busq) ?? false) ||
+                            (a.Modelo?.ToLower().Contains(busq) ?? false);
+            if (!coincide) return false;
+        }
+        if (!string.IsNullOrEmpty(filtroTipo) && a.IdTipoNavigation?.Nombre != filtroTipo)
+            return false;
+        if (!string.IsNullOrEmpty(filtroEstado) && a.Estado != filtroEstado)
+            return false;
+        return true;
+    });
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var token = await LocalStorage.GetItemAsync<string>("token_policial");
+            if (string.IsNullOrEmpty(token)) { NavManager.NavigateTo("/login"); return; }
+
+            await Task.WhenAll(CargarArmas(), CargarTipos());
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "❌ Error al cargar datos: " + ex.Message;
+        }
+        finally { cargando = false; }
+    }
+
+    async Task CargarArmas()
+    {
+        listaArmas = await Http.GetFromJsonAsync<List<ArmaDTO>>("logistica/armamento") ?? new();
+    }
+
+    async Task CargarTipos()
+    {
+        tipos = await Http.GetFromJsonAsync<List<TipoArmaDTO>>("logistica/armamento/tipos") ?? new();
+    }
+
+    // DTOs
+    public class ArmaDTO
+    {
+        public int IdArma { get; set; }
+        public int IdTipo { get; set; }
+        public string? Marca { get; set; }
+        public string? Modelo { get; set; }
+        public string? Serie { get; set; }
+        public string? Estado { get; set; }
+        public TipoArmaDTO? IdTipoNavigation { get; set; }
+    }
+
+    public class TipoArmaDTO
+    {
+        public int IdTipo { get; set; }
+        public string? Nombre { get; set; }
+    }
+}

@@ -1,0 +1,279 @@
+﻿@page "/crear-usuario"
+@using Policia.Web.Models
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavManager
+
+<PageTitle>Crear Usuario</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h2 class="page-title">⚙️ Crear Usuario</h2>
+        <span class="page-subtitle">Asignar acceso al sistema a un efectivo policial</span>
+    </div>
+    <button class="btn-volver" @onclick='() => NavManager.NavigateTo("/listar-usuarios")'>
+        ← Volver al listado
+    </button>
+</div>
+
+@* ══════════════════════════════════════════
+   PASO 1: BUSCAR POLICÍA POR CIP
+   ══════════════════════════════════════════ *@
+<div class="form-card">
+    <div class="form-section">
+        <h3 class="section-title">🔍 Paso 1: Buscar Policía por CIP</h3>
+        <div class="search-row">
+            <input @bind="cipBusqueda" class="search-input"
+                   placeholder="Ingrese el CIP del policía..." maxlength="8" />
+            <button class="btn-buscar" @onclick="BuscarPersonal" disabled="@buscando">
+                @if (buscando)
+                {
+                    <span class="btn-spinner"></span>
+                    <span>Buscando...</span>
+                }
+                else
+                {
+                    <span>🔍 Buscar</span>
+                }
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeBusqueda))
+        {
+            <div class="form-mensaje error">@mensajeBusqueda</div>
+        }
+    </div>
+
+    @* ══════════════════════════════════════════
+       PASO 2: DATOS DEL POLICÍA ENCONTRADO
+       ══════════════════════════════════════════ *@
+    @if (personalEncontrado != null)
+    {
+        <div class="form-section">
+            <h3 class="section-title">✅ Paso 2: Datos del Policía Encontrado</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Nombres</span>
+                    <span class="info-valor">@personalEncontrado.Nombres @personalEncontrado.Apellidos</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">DNI</span>
+                    <span class="info-valor">@personalEncontrado.Dni</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Grado</span>
+                    <span class="info-valor">@(personalEncontrado.IdGradoNavigation?.Nombre ?? "—")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Unidad</span>
+                    <span class="info-valor">@(personalEncontrado.IdUnidadActualNavigation?.Nombre ?? "—")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Situación</span>
+                    <span class="info-valor">@(personalEncontrado.IdSituacionNavigation?.Nombre ?? "—")</span>
+                </div>
+            </div>
+        </div>
+
+        @* ══════════════════════════════════════════
+           PASO 3: ASIGNAR CREDENCIALES
+           ══════════════════════════════════════════ *@
+        <div class="form-section">
+            <h3 class="section-title">🔐 Paso 3: Asignar Credenciales</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Contraseña *</label>
+                    <input @bind="password" type="password" placeholder="Ingrese la contraseña..." />
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Contraseña *</label>
+                    <input @bind="confirmarPassword" type="password" placeholder="Confirme la contraseña..." />
+                </div>
+                <div class="form-group">
+                    <label>Rol *</label>
+                    <select @bind="idRolSeleccionado">
+                        <option value="0">-- Seleccione un rol --</option>
+                        @foreach (var r in roles)
+                        {
+                            <option value="@r.IdRol">@r.Nombre</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-guardar" @onclick="CrearUsuarioSubmit" disabled="@creando">
+                @if (creando)
+                {
+                    <span class="btn-spinner"></span>
+                    <span>Creando usuario...</span>
+                }
+                else
+                {
+                    <span>✅ Crear Usuario</span>
+                }
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeCreacion))
+        {
+            <div class="form-mensaje @claseMensaje">@mensajeCreacion</div>
+        }
+    }
+</div>
+
+@code {
+    // Variables de búsqueda
+    string cipBusqueda = "";
+    PersonalBuscadoDTO? personalEncontrado = null;
+    string mensajeBusqueda = "";
+    bool buscando = false;
+
+    // Variables de creación
+    string password = "";
+    string confirmarPassword = "";
+    int idRolSeleccionado = 0;
+    string mensajeCreacion = "";
+    string claseMensaje = "";
+    bool creando = false;
+
+    // Roles dinámicos desde la API
+    List<RolDTO> roles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await LocalStorage.GetItemAsync<string>("token_policial");
+
+        if (string.IsNullOrEmpty(token))
+        {
+            NavManager.NavigateTo("/login", true);
+            return;
+        }
+
+        // Cargar roles desde la API
+        try
+        {
+            roles = await Http.GetFromJsonAsync<List<RolDTO>>("/seguridad/Roles") ?? new();
+        }
+        catch
+        {
+            // Si falla, los roles quedan vacíos y el select mostrará solo "Seleccione..."
+        }
+    }
+
+    async Task BuscarPersonal()
+    {
+        personalEncontrado = null;
+        mensajeBusqueda = "";
+        mensajeCreacion = "";
+
+        if (string.IsNullOrWhiteSpace(cipBusqueda))
+        {
+            mensajeBusqueda = "⚠️ Ingrese un CIP para buscar.";
+            return;
+        }
+
+        buscando = true;
+
+        try
+        {
+            var respuesta = await Http.GetAsync($"rrhh/Personal/buscar-cip/{cipBusqueda}");
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                personalEncontrado = await respuesta.Content.ReadFromJsonAsync<PersonalBuscadoDTO>();
+            }
+            else if (respuesta.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                mensajeBusqueda = "❌ No se encontró ningún policía con el CIP: " + cipBusqueda;
+            }
+            else
+            {
+                mensajeBusqueda = "⚠️ Error al buscar. Código: " + respuesta.StatusCode;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeBusqueda = "❌ Error de conexión con el Gateway.";
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            buscando = false;
+        }
+    }
+
+    async Task CrearUsuarioSubmit()
+    {
+        mensajeCreacion = "";
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            mensajeCreacion = "⚠️ Ingrese una contraseña.";
+            claseMensaje = "error";
+            return;
+        }
+
+        if (password != confirmarPassword)
+        {
+            mensajeCreacion = "⚠️ Las contraseñas no coinciden.";
+            claseMensaje = "error";
+            return;
+        }
+
+        if (idRolSeleccionado == 0)
+        {
+            mensajeCreacion = "⚠️ Seleccione un rol.";
+            claseMensaje = "error";
+            return;
+        }
+
+        creando = true;
+
+        try
+        {
+            var request = new CrearUsuarioRequest
+            {
+                Cip = personalEncontrado!.Cip,
+                IdPersonal = personalEncontrado.IdPersonal,
+                Password = password,
+                IdRol = idRolSeleccionado
+            };
+
+            var respuesta = await Http.PostAsJsonAsync("seguridad/CrearUsuario", request);
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                mensajeCreacion = $"✅ Usuario creado exitosamente para {personalEncontrado.Nombres} {personalEncontrado.Apellidos}";
+                claseMensaje = "exito";
+
+                personalEncontrado = null;
+                cipBusqueda = "";
+                password = "";
+                confirmarPassword = "";
+                idRolSeleccionado = 0;
+            }
+            else if (respuesta.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                mensajeCreacion = "⚠️ Este policía ya tiene una cuenta de usuario.";
+                claseMensaje = "error";
+            }
+            else
+            {
+                mensajeCreacion = "❌ Error al crear el usuario. Código: " + respuesta.StatusCode;
+                claseMensaje = "error";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeCreacion = "❌ Error de conexión con el Gateway.";
+            claseMensaje = "error";
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            creando = false;
+        }
+    }
+}
