@@ -1,0 +1,162 @@
+/* ══════════════════════════════════════════
+   DETALLE PERSONAL - Ficha + Timeline
+   ══════════════════════════════════════════ */
+
+.page-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+}
+.page-title { font-size: 1.3rem; font-weight: 700; color: #1a3a2e; margin: 0; }
+.page-subtitle { font-size: 0.75rem; color: #999; }
+
+.header-actions { display: flex; gap: 0.5rem; }
+
+.btn-volver {
+    background: none; border: 1.5px solid #dde2df; color: #666;
+    border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.8rem;
+    cursor: pointer; transition: all 0.2s;
+}
+.btn-volver:hover { border-color: #1a6b4f; color: #1a6b4f; }
+
+.btn-editar {
+    background: linear-gradient(135deg, #c9a84c, #dbb960); color: #1a3a2e;
+    border: none; border-radius: 8px; padding: 0.5rem 1rem;
+    font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-editar:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(201,168,76,0.3); }
+
+.loading-state {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.75rem; padding: 3rem; color: #999;
+}
+.loading-spinner {
+    width: 24px; height: 24px;
+    border: 3px solid rgba(201,168,76,0.2); border-top-color: #c9a84c;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-state { background: rgba(220,53,69,0.08); color: #dc3545; padding: 1rem; border-radius: 8px; text-align: center; }
+
+/* ── FICHA ── */
+.ficha-card {
+    background: white; border: 1px solid #e8ece9; border-radius: 14px;
+    overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 2rem;
+}
+
+.ficha-header {
+    background: linear-gradient(135deg, #0d3527, #1a5c42);
+    padding: 1.5rem 2rem;
+    display: flex; align-items: center; gap: 1.25rem;
+}
+
+.ficha-avatar {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: 2px solid #c9a84c;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; flex-shrink: 0;
+}
+
+.ficha-nombre-area { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.ficha-nombre {
+    color: white; font-size: 1.15rem; font-weight: 700; margin: 0;
+}
+
+.ficha-grado {
+    color: #c9a84c; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;
+}
+
+.ficha-situacion {
+    font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem;
+    border-radius: 4px; display: inline-block; width: fit-content;
+    letter-spacing: 0.5px;
+}
+
+.ficha-situacion.activo {
+    background: rgba(26,107,79,0.3); color: #7fffd4;
+}
+
+.ficha-situacion.retiro {
+    background: rgba(220,53,69,0.3); color: #ffaaaa;
+}
+
+/* Body */
+.ficha-body { padding: 1.5rem 2rem; }
+
+.ficha-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;
+}
+
+.ficha-dato { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.dato-label {
+    font-size: 0.7rem; font-weight: 600; color: #999;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.dato-valor {
+    font-size: 0.9rem; font-weight: 600; color: #1a3a2e;
+}
+
+.val-activo { color: #1a6b4f; }
+.val-inactivo { color: #dc3545; }
+
+/* ── HISTORIAL TIMELINE ── */
+.historial-section {
+    background: white; border: 1px solid #e8ece9; border-radius: 14px;
+    padding: 1.5rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.historial-titulo {
+    font-size: 1rem; font-weight: 700; color: #1a3a2e;
+    margin: 0 0 1.25rem; padding-bottom: 0.5rem;
+    border-bottom: 2px solid #c9a84c; display: inline-block;
+}
+
+.historial-vacio {
+    color: #aaa; font-size: 0.85rem; text-align: center; padding: 2rem;
+}
+
+.timeline { position: relative; padding-left: 2rem; }
+
+.timeline::before {
+    content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+    width: 2px; background: #e8ece9;
+}
+
+.timeline-item {
+    position: relative; padding-bottom: 1.5rem;
+}
+
+.timeline-item:last-child { padding-bottom: 0; }
+
+.timeline-dot {
+    position: absolute; left: -2rem; top: 4px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #1a6b4f; border: 2px solid white;
+    box-shadow: 0 0 0 2px #1a6b4f;
+    transform: translateX(3px);
+}
+
+.timeline-content {
+    background: #f8faf9; border: 1px solid #eef1f0;
+    border-radius: 8px; padding: 0.75rem 1rem;
+}
+
+.timeline-fecha {
+    font-size: 0.72rem; font-weight: 700; color: #c9a84c;
+    letter-spacing: 0.5px; margin-bottom: 0.25rem;
+}
+
+.timeline-motivo {
+    font-size: 0.85rem; color: #444; line-height: 1.4;
+}
+
+.timeline-doc {
+    font-size: 0.75rem; color: #888; margin-top: 0.3rem;
+}
+
+@media (max-width: 768px) {
+    .ficha-grid { grid-template-columns: repeat(2, 1fr); }
+    .ficha-header { flex-direction: column; text-align: center; }
+}

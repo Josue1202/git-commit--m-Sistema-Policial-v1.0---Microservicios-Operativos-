@@ -1,0 +1,184 @@
+@page "/personal/{Id:int}"
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavManager
+@inject HttpClient Http
+
+<PageTitle>Detalle Personal</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h2 class="page-title">👁 Ficha del Efectivo</h2>
+        <span class="page-subtitle">Información completa y movimientos</span>
+    </div>
+    <div class="header-actions">
+        <button class="btn-editar" @onclick='() => NavManager.NavigateTo($"/personal/editar/{Id}")'>
+            ✏️ Editar
+        </button>
+        <button class="btn-volver" @onclick='() => NavManager.NavigateTo("/personal")'>
+            ← Volver
+        </button>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Cargando ficha...</span>
+    </div>
+}
+else if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="error-state">@mensajeError</div>
+}
+else if (personal != null)
+{
+    <!-- Ficha principal -->
+    <div class="ficha-card">
+        <div class="ficha-header">
+            <div class="ficha-avatar">
+                @(personal.Sexo == "F" ? "👩‍✈️" : "👮")
+            </div>
+            <div class="ficha-nombre-area">
+                <h3 class="ficha-nombre">@personal.Apellidos, @personal.Nombres</h3>
+                <span class="ficha-grado">@personal.IdGradoNavigation?.Nombre</span>
+                <span class="ficha-situacion @(personal.IdSituacionNavigation?.Nombre == "ACTIVIDAD" ? "activo" : "retiro")">
+                    @personal.IdSituacionNavigation?.Nombre
+                </span>
+            </div>
+        </div>
+
+        <div class="ficha-body">
+            <div class="ficha-grid">
+                <div class="ficha-dato">
+                    <span class="dato-label">CIP</span>
+                    <span class="dato-valor">@personal.Cip</span>
+                </div>
+                <div class="ficha-dato">
+                    <span class="dato-label">DNI</span>
+                    <span class="dato-valor">@personal.Dni</span>
+                </div>
+                <div class="ficha-dato">
+                    <span class="dato-label">Sexo</span>
+                    <span class="dato-valor">@(personal.Sexo == "M" ? "Masculino" : personal.Sexo == "F" ? "Femenino" : "—")</span>
+                </div>
+                <div class="ficha-dato">
+                    <span class="dato-label">Fecha Nacimiento</span>
+                    <span class="dato-valor">@(personal.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "—")</span>
+                </div>
+                <div class="ficha-dato">
+                    <span class="dato-label">Unidad Actual</span>
+                    <span class="dato-valor">@personal.IdUnidadActualNavigation?.Nombre</span>
+                </div>
+                <div class="ficha-dato">
+                    <span class="dato-label">Fecha Ingreso</span>
+                    <span class="dato-valor">@(personal.FechaIngreso?.ToString("dd/MM/yyyy") ?? "—")</span>
+                </div>
+                <div class="ficha-dato">
+                    <span class="dato-label">Estado</span>
+                    <span class="dato-valor @(personal.Estado == true ? "val-activo" : "val-inactivo")">
+                        @(personal.Estado == true ? "🟢 Activo" : "🔴 Inactivo")
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de movimientos -->
+    <div class="historial-section">
+        <h3 class="historial-titulo">📜 Historial de Movimientos</h3>
+
+        @if (historial.Count == 0)
+        {
+            <div class="historial-vacio">No se registran movimientos para este efectivo.</div>
+        }
+        else
+        {
+            <div class="timeline">
+                @foreach (var mov in historial)
+                {
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-fecha">@mov.FechaMovimiento.ToString("dd/MM/yyyy")</div>
+                            <div class="timeline-motivo">@(mov.Motivo ?? "Sin motivo registrado")</div>
+                            @if (!string.IsNullOrEmpty(mov.Documento))
+                            {
+                                <div class="timeline-doc">📄 @mov.Documento</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    PersonalDetalleDTO? personal;
+    List<HistorialDTO> historial = new();
+    bool cargando = true;
+    string mensajeError = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var token = await LocalStorage.GetItemAsync<string>("token_policial");
+            if (string.IsNullOrEmpty(token)) { NavManager.NavigateTo("/login"); return; }
+
+            await Task.WhenAll(CargarPersonal(), CargarHistorial());
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "❌ Error: " + ex.Message;
+        }
+        finally { cargando = false; }
+    }
+
+    async Task CargarPersonal()
+    {
+        personal = await Http.GetFromJsonAsync<PersonalDetalleDTO>($"rrhh/Personal/{Id}");
+        if (personal == null) mensajeError = "No se encontró al efectivo.";
+    }
+
+    async Task CargarHistorial()
+    {
+        try
+        {
+            historial = await Http.GetFromJsonAsync<List<HistorialDTO>>($"rrhh/Personal/{Id}/historial") ?? new();
+        }
+        catch { historial = new(); }
+    }
+
+    // DTOs
+    public class PersonalDetalleDTO
+    {
+        public int IdPersonal { get; set; }
+        public string? Cip { get; set; }
+        public string? Dni { get; set; }
+        public string? Nombres { get; set; }
+        public string? Apellidos { get; set; }
+        public DateOnly? FechaNacimiento { get; set; }
+        public string? Sexo { get; set; }
+        public DateOnly? FechaIngreso { get; set; }
+        public bool? Estado { get; set; }
+        public GradoNav? IdGradoNavigation { get; set; }
+        public UnidadNav? IdUnidadActualNavigation { get; set; }
+        public SituacionNav? IdSituacionNavigation { get; set; }
+    }
+
+    public class GradoNav { public string? Nombre { get; set; } }
+    public class UnidadNav { public string? Nombre { get; set; } }
+    public class SituacionNav { public string? Nombre { get; set; } }
+
+    public class HistorialDTO
+    {
+        public int IdMovimiento { get; set; }
+        public DateOnly FechaMovimiento { get; set; }
+        public string? Motivo { get; set; }
+        public string? Documento { get; set; }
+    }
+}

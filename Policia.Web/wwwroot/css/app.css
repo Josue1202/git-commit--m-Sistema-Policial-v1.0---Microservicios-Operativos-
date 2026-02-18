@@ -1,5 +1,5 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 h1:focus {
@@ -7,17 +7,32 @@ h1:focus {
 }
 
 a, .btn-link {
-    color: #0071c1;
+    color: #1a6b4f;
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: #1a6b4f;
+    border-color: #17503a;
+}
+
+.btn-primary:hover {
+    background-color: #22876a;
+    border-color: #1a6b4f;
+}
+
+.btn-success {
+    background-color: #0d3527;
+    border-color: #0d2b22;
+}
+
+.btn-success:hover {
+    background-color: #1a5c42;
+    border-color: #17503a;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem rgba(26, 107, 79, 0.4);
 }
 
 .content {
@@ -85,7 +100,7 @@ a, .btn-link {
     }
 
         .loading-progress circle:last-child {
-            stroke: #1b6ec2;
+            stroke: #c9a84c;
             stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
             transition: stroke-dasharray 0.05s ease-in-out;
         }
@@ -102,7 +117,7 @@ a, .btn-link {
     }
 
 code {
-    color: #c02d76;
+    color: #8b6914;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {

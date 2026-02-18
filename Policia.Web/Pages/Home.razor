@@ -2,87 +2,206 @@
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavManager
 @inject HttpClient Http
-@using System.Net.Http.Headers
 
 <PageTitle>Sistema Policial - Inicio</PageTitle>
 
 @if (cargando)
 {
-    <div class="text-center mt-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando...</span>
+    <div class="loading-screen">
+        <div class="loading-emblem">
+            <div class="loading-ring"></div>
+            <span class="loading-text">PNP</span>
         </div>
+        <p class="loading-msg">Cargando sistema...</p>
     </div>
 }
 else
 {
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1>🏛️ Sistema Policial Nacional del Perú</h1>
-                <p class="lead">Bienvenido, <strong>@nombreUsuario</strong></p>
+    <!-- Banner de bienvenida -->
+    <div class="welcome-banner">
+        <div class="welcome-content">
+            <div class="welcome-left">
+                <h1 class="welcome-title">Sistema de Gestión Policial</h1>
+                <p class="welcome-sub">Bienvenido, <strong>@nombreUsuario</strong></p>
             </div>
+            <button class="btn-logout" @onclick="CerrarSesion">
+                <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="logout-icon">
+                    <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+                    <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                </svg>
+                Cerrar Sesión
+            </button>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">🔫 Mi Armamento</h5>
-                        <p class="card-text">Consulta las armas asignadas.</p>
-                        <button class="btn btn-primary" @onclick='() => NavManager.NavigateTo("/mis-armas")'>
-                            Ver Armamento
-                        </button>
-                    </div>
+    <!-- Tarjetas de estadísticas -->
+    <div class="stats-grid">
+
+        <!-- PERSONAL -->
+        <div class="stat-card" @onclick='() => NavManager.NavigateTo("/personal")'>
+            <div class="stat-header">
+                <div class="stat-icon">👥</div>
+                <div>
+                    <h3 class="stat-title">Personal</h3>
+                    <span class="stat-subtitle">Recursos Humanos</span>
                 </div>
             </div>
-
-            <div class="col-md-4 mb-3">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">👥 Personal</h5>
-                        <p class="card-text">Gestión de RRHH.</p>
-                        <button class="btn btn-secondary" disabled>Próximamente</button>
+            <div class="stat-body">
+                @if (loadingPersonal)
+                {
+                    <div class="stat-loading">Cargando...</div>
+                }
+                else if (errorPersonal)
+                {
+                    <div class="stat-error">Sin acceso</div>
+                }
+                else
+                {
+                    <div class="stat-row">
+                        <span class="stat-label">Total efectivos</span>
+                        <span class="stat-value">@totalPersonal</span>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">⚙️ Administración</h5>
-                        <p class="card-text">Gestión de usuarios del sistema.</p>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-primary btn-sm" @onclick='() => NavManager.NavigateTo("/crear-usuario")'>
-                                ➕ Crear
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm" @onclick='() => NavManager.NavigateTo("/listar-usuarios")'>
-                                📋 Listar
-                            </button>
-                        </div>
+                    <div class="stat-row">
+                        <span class="stat-label">En actividad</span>
+                        <span class="stat-value positive">@activosPersonal</span>
                     </div>
-                </div>
+                    <div class="stat-row">
+                        <span class="stat-label">En retiro</span>
+                        <span class="stat-value muted">@retiroPersonal</span>
+                    </div>
+                }
             </div>
+            <div class="stat-footer">Ver módulo <span>→</span></div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <button class="btn btn-danger" @onclick="CerrarSesion">
-                    🚪 Cerrar Sesión
-                </button>
+        <!-- ARMAMENTO -->
+        <div class="stat-card" @onclick='() => NavManager.NavigateTo("/mis-armas")'>
+            <div class="stat-header">
+                <div class="stat-icon">🔫</div>
+                <div>
+                    <h3 class="stat-title">Armamento</h3>
+                    <span class="stat-subtitle">Logística</span>
+                </div>
             </div>
+            <div class="stat-body">
+                @if (loadingArmas)
+                {
+                    <div class="stat-loading">Cargando...</div>
+                }
+                else if (errorArmas)
+                {
+                    <div class="stat-error">Sin acceso</div>
+                }
+                else
+                {
+                    <div class="stat-row">
+                        <span class="stat-label">Mis armas asignadas</span>
+                        <span class="stat-value">@misArmasCount</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Estado</span>
+                        <span class="stat-value positive">@(misArmasCount > 0 ? "Asignado" : "Sin armas")</span>
+                    </div>
+                }
+            </div>
+            <div class="stat-footer">Ver detalle <span>→</span></div>
         </div>
+
+        <!-- USUARIOS -->
+        <div class="stat-card" @onclick='() => NavManager.NavigateTo("/listar-usuarios")'>
+            <div class="stat-header">
+                <div class="stat-icon">🔐</div>
+                <div>
+                    <h3 class="stat-title">Usuarios</h3>
+                    <span class="stat-subtitle">Administración</span>
+                </div>
+            </div>
+            <div class="stat-body">
+                @if (loadingUsuarios)
+                {
+                    <div class="stat-loading">Cargando...</div>
+                }
+                else if (errorUsuarios)
+                {
+                    <div class="stat-error">Sin acceso</div>
+                }
+                else
+                {
+                    <div class="stat-row">
+                        <span class="stat-label">Total cuentas</span>
+                        <span class="stat-value">@totalUsuarios</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Activos</span>
+                        <span class="stat-value positive">@activosUsuarios</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Inactivos</span>
+                        <span class="stat-value muted">@inactivosUsuarios</span>
+                    </div>
+                }
+            </div>
+            <div class="stat-footer">Ver módulo <span>→</span></div>
+        </div>
+
+        <!-- MI PERFIL -->
+        <div class="stat-card perfil-card">
+            <div class="stat-header">
+                <div class="stat-icon">📊</div>
+                <div>
+                    <h3 class="stat-title">Mi Perfil</h3>
+                    <span class="stat-subtitle">Información Personal</span>
+                </div>
+            </div>
+            <div class="stat-body">
+                <div class="stat-row">
+                    <span class="stat-label">Usuario</span>
+                    <span class="stat-value">@nombreUsuario</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">ID Personal</span>
+                    <span class="stat-value">@idPersonal</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Sesión</span>
+                    <span class="stat-value positive">Activa</span>
+                </div>
+            </div>
+            <div class="stat-footer">Mi información</div>
+        </div>
+
+    </div>
+
+    <!-- Footer info -->
+    <div class="home-footer">
+        <span>DIRTIC PNP — Dirección de Tecnología de la Información y Comunicaciones</span>
     </div>
 }
 
 @code {
     bool cargando = true;
     string nombreUsuario = "";
+    int idPersonal = 0;
+
+    // Stats: Personal
+    bool loadingPersonal = true;
+    bool errorPersonal = false;
+    int totalPersonal, activosPersonal, retiroPersonal;
+
+    // Stats: Armas
+    bool loadingArmas = true;
+    bool errorArmas = false;
+    int misArmasCount;
+
+    // Stats: Usuarios
+    bool loadingUsuarios = true;
+    bool errorUsuarios = false;
+    int totalUsuarios, activosUsuarios, inactivosUsuarios;
 
     protected override async Task OnInitializedAsync()
     {
         var token = await LocalStorage.GetItemAsync<string>("token_policial");
-        
+
         if (string.IsNullOrEmpty(token))
         {
             NavManager.NavigateTo("/login", true);
@@ -90,15 +209,88 @@ else
         }
 
         nombreUsuario = await LocalStorage.GetItemAsync<string>("usuario_nombre") ?? "Usuario";
-        Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        
+        idPersonal = await LocalStorage.GetItemAsync<int>("id_personal");
+
         cargando = false;
+
+        // Cargar estadísticas en paralelo (sin bloquear la pantalla)
+        _ = CargarEstadisticas();
+    }
+
+    async Task CargarEstadisticas()
+    {
+        await Task.WhenAll(
+            CargarPersonal(),
+            CargarArmas(),
+            CargarUsuarios()
+        );
+    }
+
+    async Task CargarPersonal()
+    {
+        try
+        {
+            var lista = await Http.GetFromJsonAsync<List<PersonalResumenDTO>>("rrhh/Personal");
+            if (lista != null)
+            {
+                totalPersonal = lista.Count;
+                activosPersonal = lista.Count(p => p.IdSituacion == 1);
+                retiroPersonal = totalPersonal - activosPersonal;
+            }
+        }
+        catch { errorPersonal = true; }
+        finally { loadingPersonal = false; StateHasChanged(); }
+    }
+
+    async Task CargarArmas()
+    {
+        try
+        {
+            if (idPersonal > 0)
+            {
+                var lista = await Http.GetFromJsonAsync<List<object>>($"logistica/armamento/misarmas/{idPersonal}");
+                misArmasCount = lista?.Count ?? 0;
+            }
+        }
+        catch { misArmasCount = 0; }
+        finally { loadingArmas = false; errorArmas = false; StateHasChanged(); }
+    }
+
+    async Task CargarUsuarios()
+    {
+        try
+        {
+            var lista = await Http.GetFromJsonAsync<List<UsuarioResumenDTO>>("seguridad/Listar");
+            if (lista != null)
+            {
+                totalUsuarios = lista.Count;
+                activosUsuarios = lista.Count(u => u.Estado == true);
+                inactivosUsuarios = totalUsuarios - activosUsuarios;
+            }
+        }
+        catch { errorUsuarios = true; }
+        finally { loadingUsuarios = false; StateHasChanged(); }
     }
 
     async Task CerrarSesion()
     {
         await LocalStorage.RemoveItemAsync("token_policial");
         await LocalStorage.RemoveItemAsync("usuario_nombre");
+        await LocalStorage.RemoveItemAsync("id_personal");
+        await LocalStorage.RemoveItemAsync("id_rol");
         NavManager.NavigateTo("/login", true);
+    }
+
+    // DTOs mínimos para contar estadísticas
+    public class PersonalResumenDTO
+    {
+        public int IdPersonal { get; set; }
+        public int? IdSituacion { get; set; }
+    }
+
+    public class UsuarioResumenDTO
+    {
+        public int IdUsuario { get; set; }
+        public bool? Estado { get; set; }
     }
 }

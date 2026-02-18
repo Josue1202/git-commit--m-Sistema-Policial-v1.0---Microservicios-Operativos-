@@ -1,0 +1,233 @@
+@page "/personal/editar/{Id:int}"
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavManager
+@inject HttpClient Http
+
+<PageTitle>Editar Personal</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h2 class="page-title">✏️ Editar Personal</h2>
+        <span class="page-subtitle">Modificar datos del efectivo policial</span>
+    </div>
+    <button class="btn-volver" @onclick='() => NavManager.NavigateTo("/personal")'>
+        ← Volver al listado
+    </button>
+</div>
+
+@if (cargando)
+{
+    <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Cargando datos...</span>
+    </div>
+}
+else if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="error-state">@mensajeError</div>
+}
+else
+{
+    <div class="form-card">
+        <!-- Datos personales -->
+        <div class="form-section">
+            <h3 class="section-title">📋 Datos Personales</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>CIP *</label>
+                    <input @bind="personal.Cip" maxlength="8" />
+                </div>
+                <div class="form-group">
+                    <label>DNI *</label>
+                    <input @bind="personal.Dni" maxlength="8" />
+                </div>
+                <div class="form-group">
+                    <label>Nombres *</label>
+                    <input @bind="personal.Nombres" />
+                </div>
+                <div class="form-group">
+                    <label>Apellidos *</label>
+                    <input @bind="personal.Apellidos" />
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Nacimiento</label>
+                    <input @bind="personal.FechaNacimiento" type="date" />
+                </div>
+                <div class="form-group">
+                    <label>Sexo</label>
+                    <select @bind="personal.Sexo">
+                        <option value="">Seleccionar...</option>
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datos institucionales -->
+        <div class="form-section">
+            <h3 class="section-title">🏛️ Datos Institucionales</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Grado *</label>
+                    <select @bind="personal.IdGrado">
+                        <option value="0">Seleccionar grado...</option>
+                        @foreach (var g in grados)
+                        {
+                            <option value="@g.IdGrado">@g.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Unidad *</label>
+                    <select @bind="personal.IdUnidadActual">
+                        <option value="0">Seleccionar unidad...</option>
+                        @foreach (var u in unidades)
+                        {
+                            <option value="@u.IdUnidad">@u.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Situación *</label>
+                    <select @bind="personal.IdSituacion">
+                        <option value="0">Seleccionar situación...</option>
+                        @foreach (var s in situaciones)
+                        {
+                            <option value="@s.IdSituacion">@s.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Ingreso</label>
+                    <input @bind="personal.FechaIngreso" type="date" />
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select @bind="personal.Estado">
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="form-actions">
+            <button class="btn-guardar" @onclick="Guardar" disabled="@guardando">
+                @if (guardando)
+                {
+                    <span class="btn-spinner"></span>
+                    <span>Guardando...</span>
+                }
+                else
+                {
+                    <span>💾 Guardar Cambios</span>
+                }
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="form-mensaje @(exito ? "exito" : "error")">@mensaje</div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    PersonalEditDTO personal = new();
+    List<GradoDTO> grados = new();
+    List<UnidadDTO> unidades = new();
+    List<SituacionDTO> situaciones = new();
+
+    bool cargando = true;
+    bool guardando = false;
+    string mensajeError = "";
+    string mensaje = "";
+    bool exito = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var token = await LocalStorage.GetItemAsync<string>("token_policial");
+            if (string.IsNullOrEmpty(token)) { NavManager.NavigateTo("/login"); return; }
+
+            await Task.WhenAll(
+                CargarPersonal(),
+                CargarGrados(),
+                CargarUnidades(),
+                CargarSituaciones()
+            );
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "❌ Error al cargar: " + ex.Message;
+        }
+        finally { cargando = false; }
+    }
+
+    async Task CargarPersonal()
+    {
+        var p = await Http.GetFromJsonAsync<PersonalEditDTO>($"rrhh/Personal/{Id}");
+        if (p != null) personal = p;
+        else mensajeError = "No se encontró al efectivo.";
+    }
+
+    async Task CargarGrados() =>
+        grados = await Http.GetFromJsonAsync<List<GradoDTO>>("rrhh/Personal/grados") ?? new();
+    async Task CargarUnidades() =>
+        unidades = await Http.GetFromJsonAsync<List<UnidadDTO>>("rrhh/Personal/unidades") ?? new();
+    async Task CargarSituaciones() =>
+        situaciones = await Http.GetFromJsonAsync<List<SituacionDTO>>("rrhh/Personal/situaciones") ?? new();
+
+    async Task Guardar()
+    {
+        mensaje = "";
+        guardando = true;
+        try
+        {
+            var respuesta = await Http.PutAsJsonAsync($"rrhh/Personal/{Id}", personal);
+            if (respuesta.IsSuccessStatusCode)
+            {
+                mensaje = "✅ Datos actualizados exitosamente.";
+                exito = true;
+            }
+            else
+            {
+                var error = await respuesta.Content.ReadAsStringAsync();
+                mensaje = $"❌ {error}";
+                exito = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = "❌ Error: " + ex.Message;
+            exito = false;
+        }
+        finally { guardando = false; }
+    }
+
+    // DTOs
+    public class PersonalEditDTO
+    {
+        public int IdPersonal { get; set; }
+        public string? Cip { get; set; }
+        public string? Dni { get; set; }
+        public string? Nombres { get; set; }
+        public string? Apellidos { get; set; }
+        public DateOnly? FechaNacimiento { get; set; }
+        public string? Sexo { get; set; }
+        public int IdGrado { get; set; }
+        public int IdUnidadActual { get; set; }
+        public int IdSituacion { get; set; }
+        public DateOnly? FechaIngreso { get; set; }
+        public bool? Estado { get; set; }
+    }
+
+    public class GradoDTO { public int IdGrado { get; set; } public string? Nombre { get; set; } }
+    public class UnidadDTO { public int IdUnidad { get; set; } public string? Nombre { get; set; } }
+    public class SituacionDTO { public int IdSituacion { get; set; } public string? Nombre { get; set; } }
+}

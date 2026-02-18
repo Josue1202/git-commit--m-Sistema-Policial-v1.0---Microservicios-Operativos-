@@ -1,0 +1,266 @@
+@page "/editar-usuario/{Id:int}"
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager NavManager
+@inject HttpClient Http
+@using Policia.Web.Models
+
+<PageTitle>Editar Usuario</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h2 class="page-title">✏️ Editar Usuario</h2>
+        <span class="page-subtitle">Modificar rol o resetear contraseña</span>
+    </div>
+    <button class="btn-volver" @onclick='() => NavManager.NavigateTo("/listar-usuarios")'>
+        ← Volver al listado
+    </button>
+</div>
+
+@if (cargando)
+{
+    <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Cargando datos del usuario...</span>
+    </div>
+}
+else if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="error-state">@mensajeError</div>
+}
+else
+{
+    <div class="form-card">
+        <!-- Información del usuario (solo lectura) -->
+        <div class="form-section">
+            <h3 class="section-title">👤 Información del Usuario</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">CIP</span>
+                    <span class="info-valor">@usuario.Cip</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">ID Personal</span>
+                    <span class="info-valor">@(usuario.IdPersonal?.ToString() ?? "—")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Estado</span>
+                    <span class="info-valor">
+                        @if (usuario.Estado == true)
+                        {
+                            <span class="badge-activo">🟢 Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge-inactivo">🔴 Inactivo</span>
+                        }
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Creado por</span>
+                    <span class="info-valor">@(usuario.CreadoPor ?? "—")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Fecha creación</span>
+                    <span class="info-valor">@(usuario.FechaCreacion?.ToString("dd/MM/yyyy HH:mm") ?? "—")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Última modificación</span>
+                    <span class="info-valor">
+                        @if (usuario.ModificadoPor != null)
+                        {
+                            @($"{usuario.ModificadoPor} — {usuario.FechaModificacion?.ToString("dd/MM/yyyy HH:mm") ?? "sin fecha"}")
+                        }
+                        else
+                        {
+                            <text>Sin modificaciones</text>
+                        }
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campos editables -->
+        <div class="form-section">
+            <h3 class="section-title">🔧 Datos Editables</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Rol *</label>
+                    <select @bind="idRolSeleccionado">
+                        <option value="0">-- Seleccione un rol --</option>
+                        @foreach (var r in roles)
+                        {
+                            <option value="@r.IdRol">@r.Nombre</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nueva Contraseña <span class="label-hint">(dejar vacío para no cambiar)</span></label>
+                    <input @bind="nuevaPassword" type="password" placeholder="Solo si desea resetear..." />
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Contraseña</label>
+                    <input @bind="confirmarPassword" type="password" placeholder="Confirme la nueva contraseña..." />
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="form-actions">
+            <button class="btn-guardar" @onclick="Guardar" disabled="@guardando">
+                @if (guardando)
+                {
+                    <span class="btn-spinner"></span>
+                    <span>Guardando...</span>
+                }
+                else
+                {
+                    <span>💾 Guardar Cambios</span>
+                }
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="form-mensaje @(exito ? "exito" : "error")">@mensaje</div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    UsuarioDetalleDTO usuario = new();
+    List<RolDTO> roles = new();
+
+    int idRolSeleccionado = 0;
+    string nuevaPassword = "";
+    string confirmarPassword = "";
+
+    bool cargando = true;
+    bool guardando = false;
+    string mensajeError = "";
+    string mensaje = "";
+    bool exito = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await LocalStorage.GetItemAsync<string>("token_policial");
+
+        if (string.IsNullOrEmpty(token))
+        {
+            NavManager.NavigateTo("/login", true);
+            return;
+        }
+
+        try
+        {
+            await Task.WhenAll(CargarUsuario(), CargarRoles());
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "❌ Error al cargar datos: " + ex.Message;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    async Task CargarUsuario()
+    {
+        var response = await Http.GetAsync($"/seguridad/ObtenerUsuario/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var data = await response.Content.ReadFromJsonAsync<UsuarioDetalleDTO>();
+            if (data != null)
+            {
+                usuario = data;
+                idRolSeleccionado = data.IdRol;
+            }
+            else
+            {
+                mensajeError = "No se encontró el usuario.";
+            }
+        }
+        else
+        {
+            mensajeError = $"Error al obtener usuario: {response.StatusCode}";
+        }
+    }
+
+    async Task CargarRoles()
+    {
+        roles = await Http.GetFromJsonAsync<List<RolDTO>>("/seguridad/Roles") ?? new();
+    }
+
+    async Task Guardar()
+    {
+        mensaje = "";
+
+        // Validaciones
+        if (idRolSeleccionado == 0)
+        {
+            mensaje = "⚠️ Seleccione un rol.";
+            exito = false;
+            return;
+        }
+
+        // Si escribió contraseña, validar que coincidan
+        if (!string.IsNullOrWhiteSpace(nuevaPassword))
+        {
+            if (nuevaPassword != confirmarPassword)
+            {
+                mensaje = "⚠️ Las contraseñas no coinciden.";
+                exito = false;
+                return;
+            }
+
+            if (nuevaPassword.Length < 3)
+            {
+                mensaje = "⚠️ La contraseña debe tener al menos 3 caracteres.";
+                exito = false;
+                return;
+            }
+        }
+
+        guardando = true;
+
+        try
+        {
+            var request = new EditarUsuarioRequest
+            {
+                IdRol = idRolSeleccionado,
+                NuevaPassword = string.IsNullOrWhiteSpace(nuevaPassword) ? null : nuevaPassword
+            };
+
+            var respuesta = await Http.PutAsJsonAsync($"/seguridad/EditarUsuario/{Id}", request);
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                mensaje = $"✅ Usuario {usuario.Cip} editado correctamente.";
+                exito = true;
+                nuevaPassword = "";
+                confirmarPassword = "";
+
+                // Recargar los datos para mostrar la auditoría actualizada
+                await CargarUsuario();
+            }
+            else
+            {
+                var error = await respuesta.Content.ReadAsStringAsync();
+                mensaje = $"❌ {error}";
+                exito = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = "❌ Error de conexión: " + ex.Message;
+            exito = false;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+}

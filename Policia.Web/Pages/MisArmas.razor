@@ -1,62 +1,76 @@
 ﻿@page "/mis-armas"
-@using System.Net.Http.Headers
 @inject HttpClient Http
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager NavManager
 
-<div class="container mt-4">
-    <h2 class="mb-4">🔫 Mi Armamento Asignado</h2>
+<PageTitle>Mi Armamento - PNP</PageTitle>
 
-    @if (cargando)
-    {
-        <div class="alert alert-info">📡 Consultando a Logística con su Token...</div>
-    }
-    else if (!string.IsNullOrEmpty(mensajeError))
-    {
-        <div class="alert alert-danger">@mensajeError</div>
-    }
-    else if (listaArmas.Count == 0)
-    {
-        <div class="alert alert-warning">Usted no tiene armamento asignado.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover shadow">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Tipo</th>
-                        <th>Marca</th>
-                        <th>Serie</th>
-                        <th>Estado</th>
-                        <th>Fecha Asignación</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in listaArmas)
-                    {
-                        <tr>
-                            <td>@item.IdArmaNavigation?.IdTipoNavigation?.Nombre</td>
-                            <td>@item.IdArmaNavigation?.Marca</td>
-                            <td>@item.IdArmaNavigation?.Serie</td>
-                            <td>
-                                @if (item.IdArmaNavigation?.EstadoArma == "OPERATIVO")
-                                {
-                                    <span class="badge bg-success">OPERATIVO</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">@item.IdArmaNavigation?.EstadoArma</span>
-                                }
-                            </td>
-                            <td>@item.FechaAsignacion?.ToShortDateString()</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+<div class="page-header">
+    <div>
+        <h2 class="page-title">🔫 Mi Armamento Asignado</h2>
+        <span class="page-subtitle">Logística — PNP</span>
+    </div>
 </div>
+
+@if (cargando)
+{
+    <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Consultando armamento...</span>
+    </div>
+}
+else if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="error-state">@mensajeError</div>
+}
+else if (listaArmas.Count == 0)
+{
+    <div class="empty-state">
+        <span class="empty-icon">🔒</span>
+        <p>Usted no tiene armamento asignado actualmente.</p>
+    </div>
+}
+else
+{
+    <div class="tabla-container">
+        <table class="tabla-pnp">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Marca</th>
+                    <th>N° Serie</th>
+                    <th>Estado</th>
+                    <th>Fecha Asignación</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in listaArmas)
+                {
+                    <tr>
+                        <td><span class="badge-tipo">@item.IdArmaNavigation?.IdTipoNavigation?.Nombre</span></td>
+                        <td>@item.IdArmaNavigation?.Marca</td>
+                        <td><strong>@item.IdArmaNavigation?.Serie</strong></td>
+                        <td>
+                            @if (item.IdArmaNavigation?.Estado == "OPERATIVO")
+                            {
+                                <span class="badge-activo">OPERATIVO</span>
+                            }
+                            else
+                            {
+                                <span class="badge-retiro">@item.IdArmaNavigation?.Estado</span>
+                            }
+                        </td>
+                        <td>@item.FechaEntrega.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="tabla-footer">
+        <span class="tabla-total">Total: <strong>@listaArmas.Count</strong> arma(s) asignada(s)</span>
+    </div>
+}
 
 @code {
     // VARIABLES
@@ -78,20 +92,27 @@
                 return;
             }
 
-            // 2. PEGAR LA PLACA EN LA FRENTE (HEADER)
-            // Esto es vital: Sin esto, el Gateway te responde "401 Unauthorized"
-            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            // 2. LEER EL ID DEL PERSONAL DESDE LOCALSTORAGE
+            var idPersonal = await LocalStorage.GetItemAsync<int?>("id_personal");
+            if (idPersonal == null || idPersonal == 0)
+            {
+                mensajeError = "⛔ No se pudo obtener su ID de personal. Vuelva a iniciar sesión.";
+                return;
+            }
 
-            // 3. DISPARAR A LOGÍSTICA
-            // OJO: Aquí estoy poniendo el ID "1" fijo para probar.
-            // (Luego haremos que lea tu ID real del token).
-            listaArmas = await Http.GetFromJsonAsync<List<AsignacionArmaDTO>>("logistica/armamento/misarmas/1");
+            // 4. DISPARAR A LOGÍSTICA
+            listaArmas = await Http.GetFromJsonAsync<List<AsignacionArmaDTO>>($"logistica/armamento/misarmas/{idPersonal}");
         }
         catch (HttpRequestException ex)
         {
             if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
                 mensajeError = "⛔ SU SESIÓN HA EXPIRADO. Vuelva a ingresar.";
+            }
+            else if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // La API retorna 404 cuando no hay armas asignadas → mostrar estado vacío
+                listaArmas = new();
             }
             else
             {
@@ -112,7 +133,7 @@
     // (Esto evita que tengas que crear archivos separados por ahora)
     public class AsignacionArmaDTO
     {
-        public DateTime? FechaAsignacion { get; set; }
+        public DateOnly FechaEntrega { get; set; }
         public ArmaDTO IdArmaNavigation { get; set; }
     }
 
@@ -120,7 +141,7 @@
     {
         public string Marca { get; set; }
         public string Serie { get; set; }
-        public string EstadoArma { get; set; }
+        public string Estado { get; set; }
         public TipoArmaDTO IdTipoNavigation { get; set; }
     }
 
